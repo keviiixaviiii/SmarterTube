@@ -25,6 +25,7 @@ import com.liskovsoft.smartyoutubetv2.common.app.models.data.Video;
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.VideoGroup;
 import com.liskovsoft.smartyoutubetv2.common.app.models.errors.ErrorFragmentData;
 import com.liskovsoft.smartyoutubetv2.common.app.presenters.BrowsePresenter;
+import com.liskovsoft.smartyoutubetv2.common.app.presenters.SearchPresenter;
 import com.liskovsoft.smartyoutubetv2.common.app.views.BrowseView;
 import com.liskovsoft.smartyoutubetv2.tv.R;
 
@@ -80,6 +81,9 @@ public class MobileBrowseFragment extends Fragment implements BrowseView {
             }
         });
 
+        view.findViewById(R.id.btn_search).setOnClickListener(v ->
+                SearchPresenter.instance(getContext()).startSearch(null));
+
         int screenWidth = getResources().getDisplayMetrics().widthPixels;
         mGridCardWidth = screenWidth / 2;
         mShelfCardWidth = (int) (screenWidth * 0.42f);
@@ -89,11 +93,6 @@ public class MobileBrowseFragment extends Fragment implements BrowseView {
         sectionList.setLayoutManager(new LinearLayoutManager(getContext()));
         sectionList.setAdapter(mSectionAdapter);
 
-        // Drop the UI below the status bar (MotherActivity runs TV-style fullscreen).
-        int statusBarHeight = getStatusBarHeight();
-        view.findViewById(R.id.content_root).setPadding(0, statusBarHeight, 0, 0);
-        sectionList.setPadding(sectionList.getPaddingLeft(), sectionList.getPaddingTop() + statusBarHeight,
-                sectionList.getPaddingRight(), sectionList.getPaddingBottom());
         // Open the menu with an on-screen right-swipe — the left screen edge belongs to
         // the system Back gesture and must not be used for this. See mSwipeToOpenMenu.
         mContentList.addOnItemTouchListener(mSwipeToOpenMenu);
@@ -341,11 +340,6 @@ public class MobileBrowseFragment extends Fragment implements BrowseView {
         if (mEmptyContainer != null) {
             mEmptyContainer.setVisibility(View.GONE);
         }
-    }
-
-    private int getStatusBarHeight() {
-        int id = getResources().getIdentifier("status_bar_height", "dimen", "android");
-        return id > 0 ? getResources().getDimensionPixelSize(id) : 0;
     }
 
     /**

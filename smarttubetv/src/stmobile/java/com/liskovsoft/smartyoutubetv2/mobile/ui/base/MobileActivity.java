@@ -27,6 +27,10 @@ public abstract class MobileActivity extends MotherActivity {
     protected void onResume() {
         super.onResume();
         restoreRealDensity();
+        // Register in the ViewManager activity stack (the TV LeanbackActivity does the same).
+        // Without this the stack only tracks TV/Leanback activities, so the player's
+        // startParentView() can't see a phone screen as its caller and falls back to Home.
+        getViewManager().addTop(this);
     }
 
     @Override

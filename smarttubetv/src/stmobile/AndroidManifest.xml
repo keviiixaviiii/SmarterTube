@@ -7,7 +7,8 @@
     each activity in its own isolated task. On a phone that breaks the back-stack — the
     translucent AppDialogActivity has nothing behind it and the app drops out of recents.
     The phone build overrides launchMode so all activities share one task: MobileBrowseActivity
-    is the singleTask root, everything else is singleTop and stacks within it.
+    is the singleTask root; MobileSearchActivity is also singleTask so the player can return
+    straight to it (clearing itself off the top); the rest are singleTop and stack within it.
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           xmlns:tools="http://schemas.android.com/tools"
@@ -48,12 +49,6 @@
             tools:replace="android:screenOrientation,android:launchMode" />
         <activity
             android:name="com.liskovsoft.smartyoutubetv2.tv.ui.channeluploads.ChannelUploadsActivity"
-            android:screenOrientation="portrait"
-            android:launchMode="singleTop"
-            tools:node="merge"
-            tools:replace="android:screenOrientation,android:launchMode" />
-        <activity
-            android:name="com.liskovsoft.smartyoutubetv2.tv.ui.search.tags.SearchTagsActivity"
             android:screenOrientation="portrait"
             android:launchMode="singleTop"
             tools:node="merge"
@@ -115,6 +110,19 @@
             android:launchMode="singleTop"
             android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation|layoutDirection|keyboardHidden"
             android:screenOrientation="portrait"
+            android:theme="@style/Theme.SmarterTube.Mobile" />
+
+        <!-- Native phone Search screen. singleTask so when the player closes, relaunching
+             this activity routes to the existing instance and clears the player off the top
+             (singleTop would instead spawn a duplicate below the player). adjustResize so the
+             keyboard pushes the results/suggestions list instead of covering it. -->
+        <activity
+            android:name="com.liskovsoft.smartyoutubetv2.mobile.ui.search.MobileSearchActivity"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation|layoutDirection|keyboardHidden"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustResize"
             android:theme="@style/Theme.SmarterTube.Mobile" />
 
     </application>

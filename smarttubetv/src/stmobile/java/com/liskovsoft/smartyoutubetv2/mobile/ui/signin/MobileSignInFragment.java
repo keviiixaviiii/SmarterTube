@@ -64,11 +64,6 @@ public class MobileSignInFragment extends Fragment implements SignInView {
         mCodeView = view.findViewById(R.id.signin_code);
         mBrowserButton = view.findViewById(R.id.signin_browser_button);
 
-        // Drop the content below the status bar (MotherActivity runs TV-style fullscreen).
-        View root = view.findViewById(R.id.signin_root);
-        root.setPadding(root.getPaddingLeft(), root.getPaddingTop() + getStatusBarHeight(),
-                root.getPaddingRight(), root.getPaddingBottom());
-
         // Disabled until the device code arrives (mFullSignInUrl is set in showCode()).
         mBrowserButton.setEnabled(false);
         mBrowserButton.setOnClickListener(v -> openInBrowser());
@@ -138,10 +133,5 @@ public class MobileSignInFragment extends Fragment implements SignInView {
         } catch (Exception e) {
             Utils.openLinkExt(getContext(), mFullSignInUrl);
         }
-    }
-
-    private int getStatusBarHeight() {
-        int id = getResources().getIdentifier("status_bar_height", "dimen", "android");
-        return id > 0 ? getResources().getDimensionPixelSize(id) : 0;
     }
 }

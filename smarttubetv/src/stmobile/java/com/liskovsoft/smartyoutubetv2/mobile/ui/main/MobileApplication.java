@@ -13,6 +13,7 @@ import com.liskovsoft.smartyoutubetv2.common.app.views.ViewManager;
 import com.liskovsoft.smartyoutubetv2.common.app.views.WebBrowserView;
 import com.liskovsoft.smartyoutubetv2.mobile.ui.browse.MobileBrowseActivity;
 import com.liskovsoft.smartyoutubetv2.mobile.ui.playback.MobilePlaybackActivity;
+import com.liskovsoft.smartyoutubetv2.mobile.ui.search.MobileSearchActivity;
 import com.liskovsoft.smartyoutubetv2.mobile.ui.signin.MobileSignInActivity;
 import com.liskovsoft.smartyoutubetv2.tv.ui.adddevice.AddDeviceActivity;
 import com.liskovsoft.smartyoutubetv2.tv.ui.channel.ChannelActivity;
@@ -20,15 +21,15 @@ import com.liskovsoft.smartyoutubetv2.tv.ui.channeluploads.ChannelUploadsActivit
 import com.liskovsoft.smartyoutubetv2.tv.ui.dialogs.AppDialogActivity;
 import com.liskovsoft.smartyoutubetv2.tv.ui.main.MainApplication;
 import com.liskovsoft.smartyoutubetv2.tv.ui.main.SplashActivity;
-import com.liskovsoft.smartyoutubetv2.tv.ui.search.tags.SearchTagsActivity;
 import com.liskovsoft.smartyoutubetv2.tv.ui.webbrowser.WebBrowserActivity;
 
 /**
  * Application class for the phone (stmobile) flavor.
  *
- * Overrides view routing so the phone build uses its own native portrait Home
- * ({@link MobileBrowseActivity}) instead of the TV Leanback BrowseActivity. Every other
- * screen is reused from the TV code unchanged (Phases 3-5 will replace them in turn).
+ * Overrides view routing so the phone build uses its own native portrait screens
+ * ({@link MobileBrowseActivity}, {@link MobileSearchActivity}, ...) instead of the TV
+ * Leanback ones. The remaining screens are reused from the TV code unchanged (later
+ * phases will replace them in turn).
  */
 public class MobileApplication extends MainApplication {
     @Override
@@ -40,7 +41,7 @@ public class MobileApplication extends MainApplication {
         viewManager.register(BrowseView.class, MobileBrowseActivity.class); // phone Home
         viewManager.register(PlaybackView.class, MobilePlaybackActivity.class, MobileBrowseActivity.class);
         viewManager.register(AppDialogView.class, AppDialogActivity.class, MobilePlaybackActivity.class);
-        viewManager.register(SearchView.class, SearchTagsActivity.class, MobileBrowseActivity.class);
+        viewManager.register(SearchView.class, MobileSearchActivity.class, MobileBrowseActivity.class);
         viewManager.register(SignInView.class, MobileSignInActivity.class, MobileBrowseActivity.class);
         viewManager.register(AddDeviceView.class, AddDeviceActivity.class, MobileBrowseActivity.class);
         viewManager.register(ChannelView.class, ChannelActivity.class, MobileBrowseActivity.class);

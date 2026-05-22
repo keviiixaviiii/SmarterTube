@@ -43,6 +43,17 @@
                 android:singleLine="true"
                 android:textColor="@color/mobile_text_primary"
                 android:textSize="18sp" />
+
+            <ImageView
+                android:id="@+id/btn_search"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:padding="16dp"
+                android:scaleType="fitCenter"
+                android:src="@android:drawable/ic_menu_search"
+                android:tint="@color/mobile_text_primary"
+                android:contentDescription="@string/mobile_search_hint"
+                android:background="?android:attr/selectableItemBackground" />
         </LinearLayout>
 
         <FrameLayout

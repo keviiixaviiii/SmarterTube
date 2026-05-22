@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One search-suggestion row. -->
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/tag_text"
+    android:layout_width="match_parent"
+    android:layout_height="48dp"
+    android:gravity="center_vertical"
+    android:paddingStart="20dp"
+    android:paddingEnd="20dp"
+    android:singleLine="true"
+    android:ellipsize="end"
+    android:textColor="@color/mobile_text_primary"
+    android:textSize="16sp"
+    android:background="?android:attr/selectableItemBackground" />

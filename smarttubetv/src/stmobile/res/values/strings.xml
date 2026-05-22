@@ -6,4 +6,6 @@
     <string name="mobile_signin_instructions">Tap Continue below. A browser opens inside the app — sign in to your Google account, check the code matches, and tap Allow. You\'ll return here automatically.</string>
     <string name="mobile_signin_code_label">Your sign-in code</string>
     <string name="mobile_signin_continue">Continue in browser</string>
+    <string name="mobile_search_hint">Search YouTube</string>
+    <string name="mobile_search_no_results">No results found.</string>
 </resources>

@@ -19,9 +19,11 @@ import java.util.List;
 /**
  * Flat list of video cards. Used both for grid sections and (horizontally) inside shelves.
  * The card width is fixed per adapter; the thumbnail keeps a 16:9 ratio.
+ *
+ * Public so the phone Search screen ({@code mobile.ui.search}) can reuse the same card.
  */
-class VideoCardAdapter extends RecyclerView.Adapter<VideoCardAdapter.ViewHolder> {
-    interface OnVideoAction {
+public class VideoCardAdapter extends RecyclerView.Adapter<VideoCardAdapter.ViewHolder> {
+    public interface OnVideoAction {
         void onVideo(Video video);
     }
 
@@ -30,13 +32,13 @@ class VideoCardAdapter extends RecyclerView.Adapter<VideoCardAdapter.ViewHolder>
     private final OnVideoAction mLongClick;
     private final List<Video> mVideos = new ArrayList<>();
 
-    VideoCardAdapter(int cardWidth, OnVideoAction click, OnVideoAction longClick) {
+    public VideoCardAdapter(int cardWidth, OnVideoAction click, OnVideoAction longClick) {
         mCardWidth = cardWidth;
         mClick = click;
         mLongClick = longClick;
     }
 
-    void setVideos(List<Video> videos) {
+    public void setVideos(List<Video> videos) {
         mVideos.clear();
         if (videos != null) {
             mVideos.addAll(videos);
@@ -44,7 +46,7 @@ class VideoCardAdapter extends RecyclerView.Adapter<VideoCardAdapter.ViewHolder>
         notifyDataSetChanged();
     }
 
-    void clear() {
+    public void clear() {
         mVideos.clear();
         notifyDataSetChanged();
     }
@@ -55,7 +57,7 @@ class VideoCardAdapter extends RecyclerView.Adapter<VideoCardAdapter.ViewHolder>
         }
     }
 
-    Video getLast() {
+    public Video getLast() {
         return mVideos.isEmpty() ? null : mVideos.get(mVideos.size() - 1);
     }
 
