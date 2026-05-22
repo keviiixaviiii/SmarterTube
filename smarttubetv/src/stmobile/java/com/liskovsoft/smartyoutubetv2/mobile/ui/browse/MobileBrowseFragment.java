@@ -50,6 +50,7 @@ public class MobileBrowseFragment extends Fragment implements BrowseView {
     private SectionAdapter mSectionAdapter;
     private VideoCardAdapter mGridAdapter;
     private ShelfAdapter mShelfAdapter;
+    private SettingsItemAdapter mSettingsAdapter;
     private boolean mProgressShowing;
     private int mGridCardWidth;
     private int mShelfCardWidth;
@@ -208,10 +209,15 @@ public class MobileBrowseFragment extends Fragment implements BrowseView {
 
     @Override
     public void updateSection(SettingsGroup group) {
-        // Native portrait settings is a later phase (Phase 4). Placeholder for now.
-        if (mShelfAdapter != null) mShelfAdapter.clear();
-        if (mGridAdapter != null) mGridAdapter.clear();
-        showEmptyMessage("Settings — native phone screen coming in a later update.");
+        if (group == null || mContentList == null) {
+            return;
+        }
+        hideEmptyMessage();
+        mShelfAdapter = null;
+        mGridAdapter = null;
+        mSettingsAdapter = new SettingsItemAdapter(group.getItems());
+        mContentList.setLayoutManager(new LinearLayoutManager(getContext()));
+        mContentList.setAdapter(mSettingsAdapter);
     }
 
     @Override
@@ -267,7 +273,8 @@ public class MobileBrowseFragment extends Fragment implements BrowseView {
     @Override
     public boolean isEmpty() {
         return (mGridAdapter == null || mGridAdapter.getItemCount() == 0)
-                && (mShelfAdapter == null || mShelfAdapter.getItemCount() == 0);
+                && (mShelfAdapter == null || mShelfAdapter.getItemCount() == 0)
+                && (mSettingsAdapter == null || mSettingsAdapter.getItemCount() == 0);
     }
 
     @Override
@@ -283,11 +290,17 @@ public class MobileBrowseFragment extends Fragment implements BrowseView {
         if (type == BrowseSection.TYPE_ROW) {
             mShelfAdapter = new ShelfAdapter(mShelfCardWidth, mVideoClick, mVideoLongClick);
             mGridAdapter = null;
+            mSettingsAdapter = null;
             mContentList.setLayoutManager(new LinearLayoutManager(getContext()));
             mContentList.setAdapter(mShelfAdapter);
+        } else if (type == BrowseSection.TYPE_SETTINGS_GRID) {
+            // The adapter is supplied separately via updateSection(SettingsGroup).
+            mShelfAdapter = null;
+            mGridAdapter = null;
         } else {
             mGridAdapter = new VideoCardAdapter(mGridCardWidth, mVideoClick, mVideoLongClick);
             mShelfAdapter = null;
+            mSettingsAdapter = null;
             mContentList.setLayoutManager(new GridLayoutManager(getContext(), 2));
             mContentList.setAdapter(mGridAdapter);
             mContentList.addOnScrollListener(mGridScrollListener);
