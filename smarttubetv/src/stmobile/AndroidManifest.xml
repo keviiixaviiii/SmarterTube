@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Phone/portrait flavor manifest. Merged OVER src/main/AndroidManifest.xml.
+    Keep all overrides here so the TV manifest stays untouched and upstream merges stay clean.
+
+    launchMode note: the TV manifest declares every activity as singleInstance, which puts
+    each activity in its own isolated task. On a phone that breaks the back-stack — the
+    translucent AppDialogActivity has nothing behind it and the app drops out of recents.
+    The phone build overrides launchMode so all activities share one task: MobileBrowseActivity
+    is the singleTask root, everything else is singleTop and stacks within it.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          xmlns:tools="http://schemas.android.com/tools"
+          package="com.liskovsoft.smartyoutubetv2.tv">
+
+    <!-- Make the app installable on non-TV (phone/tablet) devices -->
+    <uses-feature
+        android:name="android.software.leanback"
+        android:required="false"
+        tools:replace="android:required" />
+    <uses-feature
+        android:name="android.hardware.touchscreen"
+        android:required="true"
+        tools:replace="android:required" />
+
+    <!-- Point the phone build at its own Application class (routing seam for later phases) -->
+    <application
+        android:name="com.liskovsoft.smartyoutubetv2.mobile.ui.main.MobileApplication"
+        tools:replace="android:name">
+
+        <!-- SplashActivity (launcher) is left as-is: it finishes itself right after
+             delegating, so its transient task is harmless. -->
+        <activity
+            android:name="com.liskovsoft.smartyoutubetv2.tv.ui.main.SplashActivity"
+            android:screenOrientation="portrait"
+            tools:node="merge"
+            tools:replace="android:screenOrientation" />
+        <activity
+            android:name="com.liskovsoft.smartyoutubetv2.tv.ui.browse.BrowseActivity"
+            android:screenOrientation="portrait"
+            tools:node="merge"
+            tools:replace="android:screenOrientation" />
+        <activity
+            android:name="com.liskovsoft.smartyoutubetv2.tv.ui.channel.ChannelActivity"
+            android:screenOrientation="portrait"
+            android:launchMode="singleTop"
+            tools:node="merge"
+            tools:replace="android:screenOrientation,android:launchMode" />
+        <activity
+            android:name="com.liskovsoft.smartyoutubetv2.tv.ui.channeluploads.ChannelUploadsActivity"
+            android:screenOrientation="portrait"
+            android:launchMode="singleTop"
+            tools:node="merge"
+            tools:replace="android:screenOrientation,android:launchMode" />
+        <activity
+            android:name="com.liskovsoft.smartyoutubetv2.tv.ui.search.tags.SearchTagsActivity"
+            android:screenOrientation="portrait"
+            android:launchMode="singleTop"
+            tools:node="merge"
+            tools:replace="android:screenOrientation,android:launchMode" />
+        <activity
+            android:name="com.liskovsoft.smartyoutubetv2.tv.ui.signin.SignInActivity"
+            android:screenOrientation="portrait"
+            tools:node="merge"
+            tools:replace="android:screenOrientation" />
+        <activity
+            android:name="com.liskovsoft.smartyoutubetv2.tv.ui.adddevice.AddDeviceActivity"
+            android:screenOrientation="portrait"
+            android:launchMode="singleTop"
+            tools:node="merge"
+            tools:replace="android:screenOrientation,android:launchMode" />
+        <activity
+            android:name="com.liskovsoft.smartyoutubetv2.tv.ui.webbrowser.WebBrowserActivity"
+            android:screenOrientation="portrait"
+            android:launchMode="singleTop"
+            tools:node="merge"
+            tools:replace="android:screenOrientation,android:launchMode" />
+
+        <!-- Video plays landscape, following the device sensor -->
+        <activity
+            android:name="com.liskovsoft.smartyoutubetv2.tv.ui.playback.PlaybackActivity"
+            android:screenOrientation="sensorLandscape"
+            android:launchMode="singleTop"
+            tools:node="merge"
+            tools:replace="android:screenOrientation,android:launchMode" />
+
+        <!-- Translucent dialogs (incl. the account picker) must stack within the app task
+             so the screen behind them stays visible. Keep screenOrientation="behind". -->
+        <activity
+            android:name="com.liskovsoft.smartyoutubetv2.tv.ui.dialogs.AppDialogActivity"
+            android:launchMode="singleTop"
+            tools:node="merge"
+            tools:replace="android:launchMode" />
+
+        <!-- Native phone Home screen (Phase 2). singleTask = the root of the app task. -->
+        <activity
+            android:name="com.liskovsoft.smartyoutubetv2.mobile.ui.browse.MobileBrowseActivity"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation|layoutDirection|keyboardHidden"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.SmarterTube.Mobile" />
+
+        <!-- Native phone sign-in screen -->
+        <activity
+            android:name="com.liskovsoft.smartyoutubetv2.mobile.ui.signin.MobileSignInActivity"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation|layoutDirection|keyboardHidden"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.SmarterTube.Mobile" />
+
+    </application>
+
+</manifest>

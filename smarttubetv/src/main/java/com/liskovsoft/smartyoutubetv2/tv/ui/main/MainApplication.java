@@ -62,7 +62,7 @@ public class MainApplication extends MultiDexApplication { // fix: Didn't find c
         setupViewManager();
     }
 
-    private void setupViewManager() {
+    protected void setupViewManager() {
         ViewManager viewManager = ViewManager.instance(this);
 
         viewManager.setRoot(BrowseActivity.class);

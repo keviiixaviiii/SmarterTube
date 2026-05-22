@@ -172,6 +172,19 @@ android {
             minSdkVersion 21
             targetSdkVersion project.properties.compileSdkVersion
         }
+        stmobile {
+            // Phone/portrait build. Co-installable alongside the TV build.
+            // This is the shipped product; the TV flavors are upstream-sync only.
+            isDefault true
+            applicationIdSuffix ".mobile"
+            // Fall back to ststable for dependency modules that don't
+            // declare an stmobile flavor.
+            matchingFallbacks = ['ststable']
+            // constants.gradle pins targetSdk to 27 for old Android TV boxes.
+            // 33 stops modern phones showing the "built for an older version
+            // of Android" warning.
+            targetSdkVersion 33
+        }
     }
 }
 
@@ -247,4 +260,9 @@ dependencies {
 
     // ByeByeDPI fix
     implementation 'org.conscrypt:conscrypt-android:' + conscryptVersion
+
+    // Phone flavor (stmobile) native touch UI. AppCompat brings DrawerLayout + a non-Leanback theme.
+    stmobileImplementation 'androidx.appcompat:appcompat:' + appCompatXVersion
+    // Chrome Custom Tabs for the in-app sign-in browser.
+    stmobileImplementation 'androidx.browser:browser:' + browserXVersion
 }

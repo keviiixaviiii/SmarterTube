@@ -48,6 +48,11 @@ android {
         stbeta {}
         ststable {}
         stfdroid {}
+        stmobile {
+            // Fall back to ststable for submodule deps that don't
+            // declare an stmobile flavor.
+            matchingFallbacks = ['ststable']
+        }
     }
 }
 
