@@ -7,10 +7,8 @@
     <string name="mobile_signin_code_label">Your sign-in code</string>
     <string name="mobile_signin_continue">Continue in browser</string>
     <string name="mobile_signin_done_return">Done? Return to app</string>
-    <string name="mobile_signin_error_title">Can\'t reach Google</string>
-    <string name="mobile_signin_error_dns">Sign-in needs to contact www.youtube.com but the network blocked the lookup. This is common with Pi-hole, NextDNS, or other DNS filters — allowlist youtube.com, or switch this app to Google DNS below.\n\nDetail: %1$s</string>
-    <string name="mobile_signin_error_generic">Sign-in failed: %1$s</string>
-    <string name="mobile_signin_switch_dns">Switch to Google DNS and restart</string>
+    <string name="mobile_signin_error_title">Sign-in failed</string>
+    <string name="mobile_signin_error_generic">%1$s</string>
     <string name="mobile_signin_retry">Retry sign-in</string>
     <string name="mobile_search_hint">Search YouTube</string>
     <string name="mobile_search_no_results">No results found.</string>

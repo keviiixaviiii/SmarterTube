@@ -79,11 +79,9 @@
             android:text="@string/mobile_signin_done_return"
             style="?android:attr/borderlessButtonStyle" />
 
-        <!-- Error / recovery block. Shown when YTSignInPresenter delivers an error
-             through the showCode(message, "") overload — typically a DNS failure on
-             networks where www.youtube.com is filtered (Pi-hole / NextDNS / etc.).
-             The "Switch DNS" button escalates PlayerTweaksData to DNS_TYPE_GOOGLE and
-             restarts the app so OkHttp picks up the new resolver. -->
+        <!-- Inline error block. Shown when YTSignInPresenter delivers an error through
+             the showCode(message, "") overload. Replaces the happy-path UI so the user
+             sees only the failure and a Retry button. -->
         <LinearLayout
             android:id="@+id/signin_error_block"
             android:layout_width="match_parent"
@@ -111,19 +109,11 @@
                 android:textSize="14sp" />
 
             <Button
-                android:id="@+id/signin_switch_dns_button"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:text="@string/mobile_signin_switch_dns" />
-
-            <Button
                 android:id="@+id/signin_retry_button"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="@string/mobile_signin_retry"
-                style="?android:attr/borderlessButtonStyle" />
+                android:layout_marginTop="20dp"
+                android:text="@string/mobile_signin_retry" />
         </LinearLayout>
     </LinearLayout>
 </ScrollView>

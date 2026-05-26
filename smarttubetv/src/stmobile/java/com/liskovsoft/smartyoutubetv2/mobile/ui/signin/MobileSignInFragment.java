@@ -14,13 +14,16 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.browser.customtabs.CustomTabsClient;
 import androidx.browser.customtabs.CustomTabsIntent;
 import androidx.fragment.app.Fragment;
+
+import java.util.Arrays;
+import java.util.List;
 
 import com.liskovsoft.smartyoutubetv2.common.app.presenters.SignInPresenter;
 import com.liskovsoft.smartyoutubetv2.common.app.presenters.YTSignInPresenter;
 import com.liskovsoft.smartyoutubetv2.common.app.views.SignInView;
-import com.liskovsoft.smartyoutubetv2.common.prefs.PlayerTweaksData;
 import com.liskovsoft.smartyoutubetv2.common.utils.Utils;
 import com.liskovsoft.smartyoutubetv2.mobile.ui.browse.MobileBrowseActivity;
 import com.liskovsoft.smartyoutubetv2.tv.R;
@@ -37,6 +40,7 @@ import com.liskovsoft.smartyoutubetv2.tv.R;
  */
 public class MobileSignInFragment extends Fragment implements SignInView {
     private SignInPresenter mPresenter;
+    private View mTitleView;
     private View mInstructionsView;
     private View mCodeLabelView;
     private TextView mCodeView;
@@ -44,6 +48,7 @@ public class MobileSignInFragment extends Fragment implements SignInView {
     private Button mDoneButton;
     private LinearLayout mErrorBlock;
     private TextView mErrorBody;
+    private boolean mBrowserLaunched;
     private String mFullSignInUrl;
 
     @Override
@@ -68,6 +73,7 @@ public class MobileSignInFragment extends Fragment implements SignInView {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        mTitleView = view.findViewById(R.id.signin_title);
         mInstructionsView = view.findViewById(R.id.signin_instructions);
         mCodeLabelView = view.findViewById(R.id.signin_code_label);
         mCodeView = view.findViewById(R.id.signin_code);
@@ -76,15 +82,9 @@ public class MobileSignInFragment extends Fragment implements SignInView {
         mErrorBlock = view.findViewById(R.id.signin_error_block);
         mErrorBody = view.findViewById(R.id.signin_error_body);
 
-        // Disabled until the device code arrives (mFullSignInUrl is set in showCode()).
         mBrowserButton.setEnabled(false);
         mBrowserButton.setOnClickListener(v -> openInBrowser());
-        // Manual escape hatch: if the user completed sign-in in the Custom Tab and the
-        // polling-detected auto-return is slow, this brings the app's task forward.
-        // Polling continues; close() still fires on success.
         mDoneButton.setOnClickListener(v -> returnToApp());
-
-        view.findViewById(R.id.signin_switch_dns_button).setOnClickListener(v -> switchDnsAndRestart());
         view.findViewById(R.id.signin_retry_button).setOnClickListener(v -> retrySignIn());
 
         mPresenter.onViewInitialized();
@@ -112,7 +112,6 @@ public class MobileSignInFragment extends Fragment implements SignInView {
         // YTSignInPresenter routes errors through this same callback with an empty
         // signInUrl and the error message in the userCode slot (see
         // YTSignInPresenter.updateUserCode -> error -> showCode(error.getMessage(), "")).
-        // Treat that as the failure path and surface a recovery UI instead of a code.
         if (TextUtils.isEmpty(signInUrl) && fullSignInUrl == null) {
             showError(userCode);
             return;
@@ -122,9 +121,6 @@ public class MobileSignInFragment extends Fragment implements SignInView {
         }
 
         hideError();
-        // YTSignInPresenter supplies a ready-to-open activation URL (code pre-filled) as
-        // fullSignInUrl. Fall back to hand-building it from signInUrl + user_code only if
-        // the presenter ever calls the 2-arg overload.
         mFullSignInUrl = fullSignInUrl != null
                 ? fullSignInUrl
                 : signInUrl + "?user_code=" + userCode.replace(" ", "-");
@@ -134,18 +130,10 @@ public class MobileSignInFragment extends Fragment implements SignInView {
 
     private void showError(@Nullable String message) {
         String safeMessage = message != null ? message : "";
-        boolean looksLikeDns =
-                safeMessage.contains("UnknownHostException")
-                        || safeMessage.contains("Unable to resolve host")
-                        || safeMessage.contains("No address associated with hostname");
-
-        mErrorBody.setText(getString(
-                looksLikeDns ? R.string.mobile_signin_error_dns : R.string.mobile_signin_error_generic,
-                safeMessage));
+        mErrorBody.setText(getString(R.string.mobile_signin_error_generic, safeMessage));
         mErrorBlock.setVisibility(View.VISIBLE);
 
-        // Hide the happy-path elements so the user is not staring at an empty code +
-        // a "Continue" button that would just open the activation page with no code.
+        if (mTitleView != null) mTitleView.setVisibility(View.GONE);
         if (mInstructionsView != null) mInstructionsView.setVisibility(View.GONE);
         if (mCodeLabelView != null) mCodeLabelView.setVisibility(View.GONE);
         mCodeView.setVisibility(View.GONE);
@@ -154,28 +142,15 @@ public class MobileSignInFragment extends Fragment implements SignInView {
     }
 
     private void hideError() {
-        if (mErrorBlock == null || mErrorBlock.getVisibility() == View.GONE) {
-            return;
-        }
-        mErrorBlock.setVisibility(View.GONE);
+        if (mErrorBlock != null) mErrorBlock.setVisibility(View.GONE);
+        if (mTitleView != null) mTitleView.setVisibility(View.VISIBLE);
         if (mInstructionsView != null) mInstructionsView.setVisibility(View.VISIBLE);
         if (mCodeLabelView != null) mCodeLabelView.setVisibility(View.VISIBLE);
         mCodeView.setVisibility(View.VISIBLE);
         mBrowserButton.setVisibility(View.VISIBLE);
-    }
-
-    /**
-     * Escalate the OkHttp DNS preference to Google DNS and restart the app. Mirrors
-     * the auto-recovery in {@code BrowsePresenter} for "No address associated with
-     * hostname" failures: OkHttp builds its client lazily and caches it, so a process
-     * restart is the only reliable way to pick up the new resolver.
-     */
-    private void switchDnsAndRestart() {
-        if (getContext() == null) {
-            return;
+        if (mDoneButton != null) {
+            mDoneButton.setVisibility(mBrowserLaunched ? View.VISIBLE : View.GONE);
         }
-        PlayerTweaksData.instance(getContext()).setPreferredDnsType(PlayerTweaksData.DNS_TYPE_GOOGLE);
-        Utils.restartTheApp(getContext());
     }
 
     /**
@@ -187,6 +162,7 @@ public class MobileSignInFragment extends Fragment implements SignInView {
         if (mPresenter == null) {
             return;
         }
+        mBrowserLaunched = false;
         hideError();
         mBrowserButton.setEnabled(false);
         mCodeView.setText("");
@@ -205,9 +181,7 @@ public class MobileSignInFragment extends Fragment implements SignInView {
     /**
      * Bring the app's task to the foreground. The Custom Tab opens YouTube's
      * activation page in its OWN task (Chrome's), so {@code CLEAR_TOP} alone does not
-     * cover it — {@code REORDER_TO_FRONT} pulls our task on top of Chrome's. Called
-     * both on polling success (via {@link #close()}) and from the manual "Done? Return
-     * to app" escape hatch.
+     * cover it — {@code REORDER_TO_FRONT} pulls our task on top of Chrome's.
      */
     private void returnToApp() {
         Activity activity = getActivity();
@@ -221,23 +195,46 @@ public class MobileSignInFragment extends Fragment implements SignInView {
         activity.startActivity(intent);
     }
 
+    private String resolveCustomTabsBrowser() {
+        if (getContext() == null) {
+            return null;
+        }
+        String pkg = CustomTabsClient.getPackageName(getContext(), null);
+        if (pkg != null) {
+            return pkg;
+        }
+        List<String> candidates = Arrays.asList(
+                "com.android.chrome",
+                "com.sec.android.app.sbrowser",
+                "com.chrome.beta",
+                "com.brave.browser",
+                "org.mozilla.firefox");
+        return CustomTabsClient.getPackageName(getContext(), candidates);
+    }
+
     /**
-     * Opens the activation URL in an in-app Chrome Custom Tab. Falls back to an external
-     * browser if no Custom Tabs provider is available. Reveals the "Done? Return to app"
-     * escape hatch once the tab is launched.
+     * Opens the activation URL in an in-app Chrome Custom Tab, pinned to a Custom Tabs-
+     * supporting browser so Android's intent resolution can't hand youtube.com to the
+     * YouTube app's deep-link handler. Falls back to an external browser if no provider
+     * is available.
      */
     private void openInBrowser() {
         if (mFullSignInUrl == null || getContext() == null) {
             return;
         }
         try {
-            new CustomTabsIntent.Builder()
+            CustomTabsIntent customTabs = new CustomTabsIntent.Builder()
                     .setShowTitle(true)
-                    .build()
-                    .launchUrl(getContext(), Uri.parse(mFullSignInUrl));
+                    .build();
+            String browserPkg = resolveCustomTabsBrowser();
+            if (browserPkg != null) {
+                customTabs.intent.setPackage(browserPkg);
+            }
+            customTabs.launchUrl(getContext(), Uri.parse(mFullSignInUrl));
         } catch (Exception e) {
             Utils.openLinkExt(getContext(), mFullSignInUrl);
         }
+        mBrowserLaunched = true;
         if (mDoneButton != null) {
             mDoneButton.setVisibility(View.VISIBLE);
         }
