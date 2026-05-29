@@ -46,12 +46,13 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          OPEN_PRS=$(gh pr list --label upstream-sync --state open --json number --jq 'length')
-          OPEN_ISSUES=$(gh issue list --label upstream-sync --state open --json number --jq 'length')
-          OPEN=$((OPEN_PRS + OPEN_ISSUES))
+          # The REST issues endpoint filters by label server-side and includes PRs
+          # (PRs are issues in this API). gh's --label flag does a client-side label
+          # lookup that fails silently under the scoped GITHUB_TOKEN, so use the API.
+          OPEN=$(gh api "repos/${{ github.repository }}/issues?state=open&labels=upstream-sync" --jq 'length')
           echo "open_items=$OPEN" >> $GITHUB_OUTPUT
           if [ "$OPEN" != "0" ]; then
-            echo "An upstream-sync PR or issue is already open ($OPEN_PRS PR(s), $OPEN_ISSUES issue(s)) — skipping this run."
+            echo "An upstream-sync PR or issue is already open ($OPEN item(s)) — skipping this run."
           fi
 
       - name: Check for upstream commits
