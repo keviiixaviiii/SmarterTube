@@ -41,20 +41,22 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      - name: Skip if an upstream-sync PR is already open
+      - name: Skip if an upstream-sync PR or issue is already open
         id: existing
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          OPEN=$(gh pr list --label upstream-sync --state open --json number --jq 'length')
-          echo "open_prs=$OPEN" >> $GITHUB_OUTPUT
+          OPEN_PRS=$(gh pr list --label upstream-sync --state open --json number --jq 'length')
+          OPEN_ISSUES=$(gh issue list --label upstream-sync --state open --json number --jq 'length')
+          OPEN=$((OPEN_PRS + OPEN_ISSUES))
+          echo "open_items=$OPEN" >> $GITHUB_OUTPUT
           if [ "$OPEN" != "0" ]; then
-            echo "An upstream-sync PR is already open — skipping this run."
+            echo "An upstream-sync PR or issue is already open ($OPEN_PRS PR(s), $OPEN_ISSUES issue(s)) — skipping this run."
           fi
 
       - name: Check for upstream commits
         id: check
-        if: steps.existing.outputs.open_prs == '0'
+        if: steps.existing.outputs.open_items == '0'
         run: |
           UPSTREAM_SHA=$(git rev-parse upstream/master)
           MERGE_BASE=$(git merge-base master upstream/master)
