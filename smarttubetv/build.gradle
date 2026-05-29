@@ -186,10 +186,13 @@ android {
             targetSdkVersion 33
             // Phone-port versioning. Lives in the flavor (not defaultConfig) so
             // upstream merges don't conflict on versionCode/versionName lines.
-            // versionCode = upstream code * 10 + fork iteration so the fork stays
-            // sortable above the equivalent upstream release.
-            versionCode 23702
-            versionName "31.70-mobile-alpha2"
+            // versionCode tracks ~ upstream code * 10 + fork iteration, but MUST
+            // increase monotonically across our own releases (Android rejects a
+            // lower code for in-place upgrade). Upstream's code did not move with
+            // its versionName from 31.70->31.77, so we just increment past the
+            // last shipped fork code (alpha2 = 23702) rather than recomputing.
+            versionCode 23703
+            versionName "31.77-mobile-alpha3"
         }
     }
 }
