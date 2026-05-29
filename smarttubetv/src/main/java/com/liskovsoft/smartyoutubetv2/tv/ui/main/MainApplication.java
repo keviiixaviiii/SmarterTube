@@ -1,7 +1,10 @@
 package com.liskovsoft.smartyoutubetv2.tv.ui.main;
 
+import android.os.Build;
+
 import androidx.multidex.MultiDexApplication;
 
+import com.liskovsoft.sharedutils.helpers.AppInfoHelpers;
 import com.liskovsoft.sharedutils.helpers.Helpers;
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.BrowseSection;
 import com.liskovsoft.smartyoutubetv2.common.app.presenters.BrowsePresenter;
@@ -53,10 +56,12 @@ public class MainApplication extends MultiDexApplication { // fix: Didn't find c
         // ByeByeDPI fix
         // https://android-review.googlesource.com/c/platform/external/conscrypt/+/89408/
         // NOTE: Android 10+ (API 29+) uses system Conscrypt TLS; custom Security providers are unnecessary
-        //if (Build.VERSION.SDK_INT < 29) {
+        if (Build.VERSION.SDK_INT < 29 && Conscrypt.isAvailable()) {
+            Security.insertProviderAt(Conscrypt.newProvider(), 1);
+        }
+        //if (Conscrypt.isAvailable()) {
         //    Security.insertProviderAt(Conscrypt.newProvider(), 1);
         //}
-        Security.insertProviderAt(Conscrypt.newProvider(), 1);
 
         setupGlobalExceptionHandler();
         setupViewManager();
@@ -98,10 +103,14 @@ public class MainApplication extends MultiDexApplication { // fix: Didn't find c
     }
 
     private boolean shouldIgnore(Throwable e) {
-        if (Helpers.contains(e.getMessage(), "KatnissVoiceInteractionService")) {
+        if (Helpers.containsAny(e.getMessage(), "KatnissVoiceInteractionService", "ListenableFuture")) {
             // IllegalStateException: Not allowed to start service Intent { act=android.service.voice.VoiceInteractionService
             // cmp=com.google.android.katniss/.search.serviceapi.KatnissVoiceInteractionService (has extras) }:
             // app is in background uid UidRecord{40e7240 u0a19 CEM idle change:cached procs:1 seq(0,0,0)}
+
+            // java.lang.NoSuchMethodError: No interface method addListener(Ljava/lang/Runnable;Ljava/util/concurrent/Executor;)V
+            // in class Lcom/google/common/util/concurrent/ListenableFuture; or its super classes
+            // (declaration of 'com.google.common.util.concurrent.ListenableFuture' appears in /system/framework/libsetting.jar)
             return true;
         }
 
