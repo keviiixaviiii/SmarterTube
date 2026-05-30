@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Tablet (smallest width >= 600dp), portrait. 3-column video grids. -->
+<resources>
+    <integer name="mobile_grid_span">3</integer>
+</resources>

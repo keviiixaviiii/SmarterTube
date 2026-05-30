@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Phone (stmobile) default dimens. The navigation drawer width was hardcoded
+    as 280dp in mobile_browse_fragment.xml; extracted here so values-sw600dp
+    can widen it on tablets.
+-->
+<resources>
+    <dimen name="mobile_drawer_width">280dp</dimen>
+</resources>

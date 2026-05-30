@@ -1,6 +1,7 @@
 package com.liskovsoft.smartyoutubetv2.mobile.ui.search;
 
 import android.content.Context;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -93,9 +94,10 @@ public class MobileSearchFragment extends Fragment implements SearchView {
         });
         view.findViewById(R.id.btn_clear).setOnClickListener(v -> mSearchInput.setText(""));
 
-        int cardWidth = getResources().getDisplayMetrics().widthPixels / 2;
+        int span = getResources().getInteger(R.integer.mobile_grid_span);
+        int cardWidth = getResources().getDisplayMetrics().widthPixels / span;
         mResultsAdapter = new VideoCardAdapter(cardWidth, mVideoClick, mVideoLongClick);
-        mResultsList.setLayoutManager(new GridLayoutManager(getContext(), 2));
+        mResultsList.setLayoutManager(new GridLayoutManager(getContext(), span));
         mResultsList.setAdapter(mResultsAdapter);
         mResultsList.addOnScrollListener(mScrollListener);
 
@@ -342,6 +344,20 @@ public class MobileSearchFragment extends Fragment implements SearchView {
             loadSuggestions(s.toString());
         }
     };
+
+    // Hosting activity declares configChanges="orientation|..." so it is NOT recreated on
+    // rotation; re-read the grid span (values-sw600dp-land widens it) and resize cards.
+    @Override
+    public void onConfigurationChanged(@NonNull Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        int span = getResources().getInteger(R.integer.mobile_grid_span);
+        if (mResultsList != null && mResultsList.getLayoutManager() instanceof GridLayoutManager) {
+            ((GridLayoutManager) mResultsList.getLayoutManager()).setSpanCount(span);
+        }
+        if (mResultsAdapter != null) {
+            mResultsAdapter.setCardWidth(getResources().getDisplayMetrics().widthPixels / span);
+        }
+    }
 
     private final VideoCardAdapter.OnVideoAction mVideoClick = video -> {
         if (mPresenter != null) {

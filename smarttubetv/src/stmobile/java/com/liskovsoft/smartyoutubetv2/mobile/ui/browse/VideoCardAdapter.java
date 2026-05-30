@@ -27,7 +27,7 @@ public class VideoCardAdapter extends RecyclerView.Adapter<VideoCardAdapter.View
         void onVideo(Video video);
     }
 
-    private final int mCardWidth;
+    private int mCardWidth;
     private final OnVideoAction mClick;
     private final OnVideoAction mLongClick;
     private final List<Video> mVideos = new ArrayList<>();
@@ -36,6 +36,19 @@ public class VideoCardAdapter extends RecyclerView.Adapter<VideoCardAdapter.View
         mCardWidth = cardWidth;
         mClick = click;
         mLongClick = longClick;
+    }
+
+    /**
+     * Update the per-card width (e.g. after an orientation change, where the grid span
+     * and therefore the column width change). The host activities declare
+     * {@code configChanges="orientation|..."} so they are NOT recreated on rotation -
+     * the fragment re-reads the span and calls this to keep card width == column width.
+     */
+    public void setCardWidth(int cardWidth) {
+        if (mCardWidth != cardWidth) {
+            mCardWidth = cardWidth;
+            notifyDataSetChanged();
+        }
     }
 
     public void setVideos(List<Video> videos) {
@@ -81,6 +94,13 @@ public class VideoCardAdapter extends RecyclerView.Adapter<VideoCardAdapter.View
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+        // Re-apply width on every bind so setCardWidth() (orientation change) resizes
+        // recycled cards, keeping each card the width of its grid column.
+        if (holder.itemView.getLayoutParams() != null) {
+            holder.itemView.getLayoutParams().width = mCardWidth;
+        }
+        holder.thumb.getLayoutParams().height = mCardWidth * 9 / 16;
+
         Video video = mVideos.get(position);
         holder.title.setText(video.getTitle());
         String author = video.getAuthor();

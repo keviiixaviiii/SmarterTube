@@ -1,5 +1,6 @@
 package com.liskovsoft.smartyoutubetv2.mobile.ui.channeluploads;
 
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -60,9 +61,10 @@ public class MobileChannelUploadsFragment extends Fragment implements ChannelUpl
             }
         });
 
-        int cardWidth = getResources().getDisplayMetrics().widthPixels / 2;
+        int span = getResources().getInteger(R.integer.mobile_grid_span);
+        int cardWidth = getResources().getDisplayMetrics().widthPixels / span;
         mAdapter = new VideoCardAdapter(cardWidth, mVideoClick, mVideoLongClick);
-        mGrid.setLayoutManager(new GridLayoutManager(getContext(), 2));
+        mGrid.setLayoutManager(new GridLayoutManager(getContext(), span));
         mGrid.setAdapter(mAdapter);
         mGrid.addOnScrollListener(mScrollListener);
 
@@ -152,6 +154,20 @@ public class MobileChannelUploadsFragment extends Fragment implements ChannelUpl
     }
 
     // ----- callbacks -----
+
+    // Hosting activity declares configChanges="orientation|..." so it is NOT recreated on
+    // rotation; re-read the grid span (values-sw600dp-land widens it) and resize cards.
+    @Override
+    public void onConfigurationChanged(@NonNull Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        int span = getResources().getInteger(R.integer.mobile_grid_span);
+        if (mGrid != null && mGrid.getLayoutManager() instanceof GridLayoutManager) {
+            ((GridLayoutManager) mGrid.getLayoutManager()).setSpanCount(span);
+        }
+        if (mAdapter != null) {
+            mAdapter.setCardWidth(getResources().getDisplayMetrics().widthPixels / span);
+        }
+    }
 
     private final VideoCardAdapter.OnVideoAction mVideoClick = video -> {
         if (mPresenter != null) {

@@ -111,7 +111,7 @@
 
     <!-- Drawer menu: scrollable section list + pinned About footer at the bottom. -->
     <LinearLayout
-        android:layout_width="280dp"
+        android:layout_width="@dimen/mobile_drawer_width"
         android:layout_height="match_parent"
         android:layout_gravity="start"
         android:orientation="vertical"

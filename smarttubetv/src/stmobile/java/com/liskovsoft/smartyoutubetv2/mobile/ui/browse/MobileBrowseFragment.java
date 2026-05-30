@@ -3,6 +3,7 @@ package com.liskovsoft.smartyoutubetv2.mobile.ui.browse;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -65,6 +66,7 @@ public class MobileBrowseFragment extends Fragment implements BrowseView {
     private boolean mProgressShowing;
     private boolean mSwipeRefreshing;
     private int mGridCardWidth;
+    private int mGridSpan;
     private int mShelfCardWidth;
 
     @Nullable
@@ -106,7 +108,8 @@ public class MobileBrowseFragment extends Fragment implements BrowseView {
         });
 
         int screenWidth = getResources().getDisplayMetrics().widthPixels;
-        mGridCardWidth = screenWidth / 2;
+        mGridSpan = getResources().getInteger(R.integer.mobile_grid_span);
+        mGridCardWidth = screenWidth / mGridSpan;
         mShelfCardWidth = (int) (screenWidth * 0.42f);
 
         mSectionAdapter = new SectionAdapter(this::onSectionPicked);
@@ -400,9 +403,25 @@ public class MobileBrowseFragment extends Fragment implements BrowseView {
             mGridAdapter = new VideoCardAdapter(mGridCardWidth, mVideoClick, mVideoLongClick);
             mShelfAdapter = null;
             mSettingsAdapter = null;
-            mContentList.setLayoutManager(new GridLayoutManager(getContext(), 2));
+            mContentList.setLayoutManager(new GridLayoutManager(getContext(), mGridSpan));
             mContentList.setAdapter(mGridAdapter);
             mContentList.addOnScrollListener(mGridScrollListener);
+        }
+    }
+
+    // Hosting activity declares configChanges="orientation|..." so it is NOT recreated on
+    // rotation; re-read the grid span (values-sw600dp-land widens it) and resize cards.
+    // Only the grid section uses a GridLayoutManager; shelves/settings are left as-is.
+    @Override
+    public void onConfigurationChanged(@NonNull Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        mGridSpan = getResources().getInteger(R.integer.mobile_grid_span);
+        mGridCardWidth = getResources().getDisplayMetrics().widthPixels / mGridSpan;
+        if (mContentList != null && mContentList.getLayoutManager() instanceof GridLayoutManager) {
+            ((GridLayoutManager) mContentList.getLayoutManager()).setSpanCount(mGridSpan);
+        }
+        if (mGridAdapter != null) {
+            mGridAdapter.setCardWidth(mGridCardWidth);
         }
     }
 

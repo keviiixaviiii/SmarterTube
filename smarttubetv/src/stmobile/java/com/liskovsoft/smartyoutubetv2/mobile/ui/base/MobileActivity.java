@@ -1,6 +1,7 @@
 package com.liskovsoft.smartyoutubetv2.mobile.ui.base;
 
 import android.content.Context;
+import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.os.Bundle;
@@ -58,6 +59,24 @@ public abstract class MobileActivity extends MotherActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         restoreRealDensity();
+        allowLandscapeOnTablets();
+    }
+
+    /**
+     * The content activities (browse/search/channel/sign-in) are locked to portrait in
+     * the manifest - the right default on a phone. On a tablet (smallestWidth >= 600dp)
+     * we want them to rotate so the {@code values-sw600dp-land} resources (4-column grids)
+     * can apply. A runtime {@code setRequestedOrientation} overrides the manifest lock.
+     *
+     * Guarded on the activity actually being portrait-locked, so activities that opt into
+     * {@code screenOrientation="behind"} (the settings dialog, playback) keep their own
+     * orientation behaviour untouched.
+     */
+    private void allowLandscapeOnTablets() {
+        boolean isTablet = getResources().getConfiguration().smallestScreenWidthDp >= 600;
+        if (isTablet && getRequestedOrientation() == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) {
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_USER);
+        }
     }
 
     @Override

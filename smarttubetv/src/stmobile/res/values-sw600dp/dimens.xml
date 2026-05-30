@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Tablet (smallest width >= 600dp). Wider drawer to match the larger canvas. -->
+<resources>
+    <dimen name="mobile_drawer_width">320dp</dimen>
+</resources>

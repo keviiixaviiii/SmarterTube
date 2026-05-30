@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Phone (stmobile) default. Grid columns for the video grids (Home grid,
+    Search results, Channel uploads). Phones are ~384dp wide -> 2 columns.
+    Tablets (sw600dp) override this in values-sw600dp / values-sw600dp-land.
+    The fragments use this value BOTH for GridLayoutManager span and for the
+    per-card width divisor (screenWidth / span), so the two stay in lockstep.
+-->
+<resources>
+    <integer name="mobile_grid_span">2</integer>
+</resources>
