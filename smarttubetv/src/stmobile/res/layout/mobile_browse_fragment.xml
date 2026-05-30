@@ -123,7 +123,7 @@
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="#33FFFFFF" />
+            android:background="@color/mobile_divider" />
 
         <TextView
             android:id="@+id/drawer_about"

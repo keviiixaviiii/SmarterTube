@@ -1,5 +1,7 @@
 package com.liskovsoft.smartyoutubetv2.mobile.ui.base;
 
+import android.content.Context;
+import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
@@ -7,6 +9,7 @@ import android.util.DisplayMetrics;
 import androidx.annotation.Nullable;
 
 import com.liskovsoft.smartyoutubetv2.common.misc.MotherActivity;
+import com.liskovsoft.smartyoutubetv2.mobile.ui.prefs.MobileThemePrefs;
 import com.liskovsoft.smartyoutubetv2.tv.R;
 
 /**
@@ -15,8 +18,42 @@ import com.liskovsoft.smartyoutubetv2.tv.R;
  * Applies the AppCompat phone theme instead of MotherActivity's Leanback TV theme, and
  * restores the device's true display density (MotherActivity scales density for 10-foot
  * TV layouts, which makes everything tiny on a phone).
+ *
+ * Also forces the activity's {@link Configuration} uiMode bits to match the in-app
+ * Theme pref. MotherActivity extends {@link androidx.fragment.app.FragmentActivity}
+ * (not AppCompatActivity), so {@code AppCompatDelegate.setDefaultNightMode} does NOT
+ * automatically drive uiMode/recreate here - we have to do it ourselves via
+ * {@link #attachBaseContext}. SYSTEM leaves the inherited uiMode untouched (so the
+ * system Settings -> Display -> Dark mode toggle still drives the app), LIGHT/DARK
+ * force the corresponding bit.
  */
 public abstract class MobileActivity extends MotherActivity {
+    @Override
+    protected void attachBaseContext(Context newBase) {
+        super.attachBaseContext(applyThemeOverride(newBase));
+    }
+
+    private Context applyThemeOverride(Context base) {
+        if (base == null) {
+            return null;
+        }
+        MobileThemePrefs.Mode mode = MobileThemePrefs.getMode(base);
+        if (mode == MobileThemePrefs.Mode.SYSTEM) {
+            return base; // Inherit whatever uiMode the system gave us.
+        }
+        Configuration overrideConfig = new Configuration();
+        // setTo(empty) would clobber locale/density - createConfigurationContext merges
+        // an empty config with the base, so we only set the bits we want to change.
+        int nightBit = (mode == MobileThemePrefs.Mode.DARK)
+                ? Configuration.UI_MODE_NIGHT_YES
+                : Configuration.UI_MODE_NIGHT_NO;
+        // Preserve non-night uiMode bits (e.g. UI_MODE_TYPE_NORMAL) from base.
+        int baseUiMode = base.getResources().getConfiguration().uiMode
+                & ~Configuration.UI_MODE_NIGHT_MASK;
+        overrideConfig.uiMode = baseUiMode | nightBit;
+        return base.createConfigurationContext(overrideConfig);
+    }
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

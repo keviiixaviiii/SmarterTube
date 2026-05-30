@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Dark-mode brand tokens. Applied when the system is in dark mode (or when the
+    user picks "Dark" via the in-app Theme setting, which calls
+    AppCompatDelegate.setDefaultNightMode(MODE_NIGHT_YES)).
+
+    These values are the alpha2/alpha3 look - kept byte-identical so existing
+    users see no visual change when they're in dark mode.
+-->
+<resources>
+    <color name="brand_primary">#0F0F0F</color>
+    <color name="brand_primary_dark">#000000</color>
+    <color name="brand_on_primary">#FFFFFFFF</color>
+    <color name="brand_accent">#FFB300</color>
+    <color name="brand_accent_on">#FF000000</color>
+
+    <color name="mobile_background">@color/brand_primary</color>
+    <color name="mobile_surface">#212121</color>
+    <color name="mobile_primary">@color/brand_primary</color>
+    <color name="mobile_primary_dark">@color/brand_primary_dark</color>
+    <color name="mobile_accent">@color/brand_accent</color>
+    <color name="mobile_text_primary">@color/brand_on_primary</color>
+    <color name="mobile_text_secondary">#FFAAAAAA</color>
+    <color name="mobile_drawer_selected">#33FFFFFF</color>
+
+    <color name="mobile_divider">#33FFFFFF</color>
+    <color name="mobile_thumbnail_placeholder">#000000</color>
+</resources>

@@ -1,19 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    Default (light-mode) brand tokens. Android picks values/ when no -night
+    qualifier matches, i.e. when the system is in light mode (or the user
+    forced "Light" via the in-app Theme setting). The dark variants live in
+    values-night/colors.xml and were the alpha2/alpha3 defaults.
+
+    Use these tokens in layouts and themes; the mobile_* aliases below keep
+    older layout references working unchanged.
+-->
 <resources>
-    <!-- Brand tokens. Use these in layouts and themes; the mobile_* aliases below
-         keep older layout references working unchanged. -->
-    <color name="brand_primary">#0F0F0F</color>
-    <color name="brand_primary_dark">#000000</color>
-    <color name="brand_on_primary">#FFFFFFFF</color>
+    <color name="brand_primary">#FFFFFFFF</color>
+    <color name="brand_primary_dark">#FFE0E0E0</color>
+    <color name="brand_on_primary">#FF000000</color>
     <color name="brand_accent">#FFB300</color>
     <color name="brand_accent_on">#FF000000</color>
 
     <color name="mobile_background">@color/brand_primary</color>
-    <color name="mobile_surface">#212121</color>
+    <color name="mobile_surface">#FFF5F5F5</color>
     <color name="mobile_primary">@color/brand_primary</color>
     <color name="mobile_primary_dark">@color/brand_primary_dark</color>
     <color name="mobile_accent">@color/brand_accent</color>
     <color name="mobile_text_primary">@color/brand_on_primary</color>
-    <color name="mobile_text_secondary">#FFAAAAAA</color>
-    <color name="mobile_drawer_selected">#33FFFFFF</color>
+    <color name="mobile_text_secondary">#FF555555</color>
+    <color name="mobile_drawer_selected">#1F000000</color>
+
+    <color name="mobile_divider">#1F000000</color>
+    <color name="mobile_thumbnail_placeholder">#FFE0E0E0</color>
 </resources>

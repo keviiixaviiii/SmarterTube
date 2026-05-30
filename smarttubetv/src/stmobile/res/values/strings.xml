@@ -23,4 +23,11 @@
     <string name="mobile_about_link_fork">Fork: github.com/CodeSculptor/SmarterTube</string>
     <string name="mobile_about_url_upstream" translatable="false">https://github.com/yuliskov/SmartTube</string>
     <string name="mobile_about_url_fork" translatable="false">https://github.com/CodeSculptor/SmarterTube</string>
+
+    <!-- Theme picker (light/dark) -->
+    <string name="mobile_theme_title">Theme</string>
+    <string name="mobile_theme_option_system">Follow system</string>
+    <string name="mobile_theme_option_light">Light</string>
+    <string name="mobile_theme_option_dark">Dark</string>
+
 </resources>

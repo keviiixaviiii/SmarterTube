@@ -16,6 +16,7 @@ import com.liskovsoft.smartyoutubetv2.mobile.ui.channel.MobileChannelActivity;
 import com.liskovsoft.smartyoutubetv2.mobile.ui.channeluploads.MobileChannelUploadsActivity;
 import com.liskovsoft.smartyoutubetv2.mobile.ui.dialogs.MobileAppDialogActivity;
 import com.liskovsoft.smartyoutubetv2.mobile.ui.playback.MobilePlaybackActivity;
+import com.liskovsoft.smartyoutubetv2.mobile.ui.prefs.MobileThemePrefs;
 import com.liskovsoft.smartyoutubetv2.mobile.ui.search.MobileSearchActivity;
 import com.liskovsoft.smartyoutubetv2.mobile.ui.signin.MobileSignInActivity;
 import com.liskovsoft.smartyoutubetv2.tv.ui.adddevice.AddDeviceActivity;
@@ -32,6 +33,15 @@ import com.liskovsoft.smartyoutubetv2.tv.ui.webbrowser.WebBrowserActivity;
  * phases will replace them in turn).
  */
 public class MobileApplication extends MainApplication {
+    @Override
+    public void onCreate() {
+        // Apply the persisted Theme choice (System / Light / Dark) before any activity
+        // is created so the first frame uses the correct values/ vs values-night/ tokens
+        // - avoids a recreate-flicker on cold start.
+        MobileThemePrefs.apply(this);
+        super.onCreate();
+    }
+
     @Override
     protected void setupViewManager() {
         ViewManager viewManager = ViewManager.instance(this);

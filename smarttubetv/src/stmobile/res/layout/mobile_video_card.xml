@@ -14,7 +14,7 @@
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:scaleType="centerCrop"
-        android:background="#000000"
+        android:background="@color/mobile_thumbnail_placeholder"
         android:contentDescription="@null" />
 
     <TextView

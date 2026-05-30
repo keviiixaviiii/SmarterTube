@@ -1,5 +1,7 @@
 package com.liskovsoft.smartyoutubetv2.mobile.ui.browse;
 
+import android.app.AlertDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -22,6 +24,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.BrowseSection;
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.SettingsGroup;
+import com.liskovsoft.smartyoutubetv2.common.app.models.data.SettingsItem;
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.Video;
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.VideoGroup;
 import com.liskovsoft.smartyoutubetv2.common.app.models.errors.ErrorFragmentData;
@@ -29,7 +32,11 @@ import com.liskovsoft.smartyoutubetv2.common.app.presenters.BrowsePresenter;
 import com.liskovsoft.smartyoutubetv2.common.app.presenters.SearchPresenter;
 import com.liskovsoft.smartyoutubetv2.common.app.views.BrowseView;
 import com.liskovsoft.smartyoutubetv2.mobile.ui.about.MobileAboutActivity;
+import com.liskovsoft.smartyoutubetv2.mobile.ui.prefs.MobileThemePrefs;
 import com.liskovsoft.smartyoutubetv2.tv.R;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Native portrait Home screen. Implements {@link BrowseView} and is driven by the
@@ -224,9 +231,63 @@ public class MobileBrowseFragment extends Fragment implements BrowseView {
         hideEmptyMessage();
         mShelfAdapter = null;
         mGridAdapter = null;
-        mSettingsAdapter = new SettingsItemAdapter(group.getItems());
+        mSettingsAdapter = new SettingsItemAdapter(prependThemeRow(group.getItems()));
         mContentList.setLayoutManager(new LinearLayoutManager(getContext()));
         mContentList.setAdapter(mSettingsAdapter);
+    }
+
+    /**
+     * Prepend a phone-only "Theme" row to the upstream Settings list. Upstream's
+     * ColorScheme picker is TV-only (all 8 schemes are dark variants) and isn't
+     * surfaced in the stmobile UI, so this is a dedicated Day-Night toggle that
+     * drives {@link MobileThemePrefs}.
+     */
+    private List<SettingsItem> prependThemeRow(List<SettingsItem> upstreamItems) {
+        Context context = getContext();
+        List<SettingsItem> items = new ArrayList<>();
+        if (context != null) {
+            items.add(new SettingsItem(
+                    context.getString(R.string.mobile_theme_title),
+                    this::showThemePicker,
+                    R.drawable.settings_theme));
+        }
+        if (upstreamItems != null) {
+            items.addAll(upstreamItems);
+        }
+        return items;
+    }
+
+    private void showThemePicker() {
+        Context context = getContext();
+        if (context == null) {
+            return;
+        }
+        MobileThemePrefs.Mode[] modes = MobileThemePrefs.Mode.values();
+        String[] labels = {
+                context.getString(R.string.mobile_theme_option_system),
+                context.getString(R.string.mobile_theme_option_light),
+                context.getString(R.string.mobile_theme_option_dark),
+        };
+        MobileThemePrefs.Mode current = MobileThemePrefs.getMode(context);
+        int checked = current.ordinal();
+        new AlertDialog.Builder(context)
+                .setTitle(R.string.mobile_theme_title)
+                .setSingleChoiceItems(labels, checked, (dialog, which) -> {
+                    if (modes[which] == current) {
+                        dialog.dismiss();
+                        return;
+                    }
+                    MobileThemePrefs.setMode(context, modes[which]);
+                    dialog.dismiss();
+                    // MotherActivity is a FragmentActivity (not AppCompatActivity), so
+                    // setDefaultNightMode does not auto-recreate. MobileActivity reads
+                    // the pref in attachBaseContext, so a manual recreate() pulls in the
+                    // new uiMode override.
+                    if (getActivity() != null) {
+                        getActivity().recreate();
+                    }
+                })
+                .show();
     }
 
     @Override
