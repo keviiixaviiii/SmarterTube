@@ -21,6 +21,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.BrowseSection;
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.SettingsGroup;
@@ -50,6 +51,7 @@ import java.util.List;
 public class MobileBrowseFragment extends Fragment implements BrowseView {
     private BrowsePresenter mPresenter;
     private DrawerLayout mDrawer;
+    private SwipeRefreshLayout mSwipeRefresh;
     private RecyclerView mContentList;
     private ProgressBar mProgressBar;
     private TextView mEmptyMessage;
@@ -61,6 +63,7 @@ public class MobileBrowseFragment extends Fragment implements BrowseView {
     private ShelfAdapter mShelfAdapter;
     private SettingsItemAdapter mSettingsAdapter;
     private boolean mProgressShowing;
+    private boolean mSwipeRefreshing;
     private int mGridCardWidth;
     private int mShelfCardWidth;
 
@@ -77,6 +80,7 @@ public class MobileBrowseFragment extends Fragment implements BrowseView {
 
         mDrawer = view.findViewById(R.id.drawer_layout);
         mContentList = view.findViewById(R.id.content_list);
+        mSwipeRefresh = view.findViewById(R.id.swipe_refresh);
         mProgressBar = view.findViewById(R.id.progress_bar);
         mEmptyMessage = view.findViewById(R.id.empty_message);
         mEmptyContainer = view.findViewById(R.id.empty_container);
@@ -113,6 +117,18 @@ public class MobileBrowseFragment extends Fragment implements BrowseView {
         // Open the menu with an on-screen right-swipe — the left screen edge belongs to
         // the system Back gesture and must not be used for this. See mSwipeToOpenMenu.
         mContentList.addOnItemTouchListener(mSwipeToOpenMenu);
+
+        mSwipeRefresh.setColorSchemeResources(R.color.brand_accent);
+        mSwipeRefresh.setProgressBackgroundColorSchemeResource(R.color.mobile_surface);
+        mSwipeRefresh.setOnRefreshListener(() -> {
+            // Settings section has nothing to reload; otherwise re-fetch the current section.
+            if (mPresenter == null || mSettingsAdapter != null) {
+                stopSwipeRefresh();
+                return;
+            }
+            mSwipeRefreshing = true;
+            mPresenter.refresh(false);
+        });
 
         mPresenter = BrowsePresenter.instance(getContext());
         mPresenter.setView(this);
@@ -325,8 +341,20 @@ public class MobileBrowseFragment extends Fragment implements BrowseView {
     @Override
     public void showProgressBar(boolean show) {
         mProgressShowing = show;
+        // While pull-to-refresh is active the SwipeRefreshLayout spinner stands in for
+        // the centre bar; don't show both.
         if (mProgressBar != null) {
-            mProgressBar.setVisibility(show ? View.VISIBLE : View.GONE);
+            mProgressBar.setVisibility(show && !mSwipeRefreshing ? View.VISIBLE : View.GONE);
+        }
+        if (!show) {
+            stopSwipeRefresh();
+        }
+    }
+
+    private void stopSwipeRefresh() {
+        mSwipeRefreshing = false;
+        if (mSwipeRefresh != null) {
+            mSwipeRefresh.setRefreshing(false);
         }
     }
 

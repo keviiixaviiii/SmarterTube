@@ -12,6 +12,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.Video;
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.VideoGroup;
@@ -32,10 +33,12 @@ import com.liskovsoft.smartyoutubetv2.tv.R;
 public class MobileChannelFragment extends Fragment implements ChannelView {
     private ChannelPresenter mPresenter;
     private RecyclerView mList;
+    private SwipeRefreshLayout mSwipeRefresh;
     private ProgressBar mProgressBar;
     private TextView mTitleView;
     private ShelfAdapter mShelfAdapter;
     private int mShelfCardWidth;
+    private boolean mSwipeRefreshing;
 
     @Nullable
     @Override
@@ -49,6 +52,7 @@ public class MobileChannelFragment extends Fragment implements ChannelView {
         super.onViewCreated(view, savedInstanceState);
 
         mList = view.findViewById(R.id.channel_list);
+        mSwipeRefresh = view.findViewById(R.id.swipe_refresh);
         mProgressBar = view.findViewById(R.id.progress_bar);
         mTitleView = view.findViewById(R.id.channel_title);
 
@@ -67,6 +71,20 @@ public class MobileChannelFragment extends Fragment implements ChannelView {
                 });
         mList.setLayoutManager(new LinearLayoutManager(getContext()));
         mList.setAdapter(mShelfAdapter);
+
+        mSwipeRefresh.setColorSchemeResources(R.color.brand_accent);
+        mSwipeRefresh.setProgressBackgroundColorSchemeResource(R.color.mobile_surface);
+        mSwipeRefresh.setOnRefreshListener(() -> {
+            // ChannelPresenter has no public refresh(); openChannel(id) is the reload path
+            // (clears the view and re-fetches the channel rows).
+            String channelId = mPresenter != null ? mPresenter.getChannelId() : null;
+            if (channelId != null) {
+                mSwipeRefreshing = true;
+                mPresenter.openChannel(channelId);
+            } else {
+                stopSwipeRefresh();
+            }
+        });
 
         mPresenter = ChannelPresenter.instance(getContext());
         mPresenter.setView(this);
@@ -126,8 +144,20 @@ public class MobileChannelFragment extends Fragment implements ChannelView {
 
     @Override
     public void showProgressBar(boolean show) {
+        // While pull-to-refresh is active the SwipeRefreshLayout spinner stands in for
+        // the centre bar; don't show both.
         if (mProgressBar != null) {
-            mProgressBar.setVisibility(show ? View.VISIBLE : View.GONE);
+            mProgressBar.setVisibility(show && !mSwipeRefreshing ? View.VISIBLE : View.GONE);
+        }
+        if (!show) {
+            stopSwipeRefresh();
+        }
+    }
+
+    private void stopSwipeRefresh() {
+        mSwipeRefreshing = false;
+        if (mSwipeRefresh != null) {
+            mSwipeRefresh.setRefreshing(false);
         }
     }
 

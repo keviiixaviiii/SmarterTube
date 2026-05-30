@@ -22,6 +22,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.Video;
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.VideoGroup;
@@ -51,6 +52,7 @@ public class MobileSearchFragment extends Fragment implements SearchView {
     private SearchPresenter mPresenter;
     private EditText mSearchInput;
     private RecyclerView mResultsList;
+    private SwipeRefreshLayout mSwipeRefresh;
     private RecyclerView mSuggestionsList;
     private ProgressBar mProgressBar;
     private TextView mEmptyMessage;
@@ -60,6 +62,7 @@ public class MobileSearchFragment extends Fragment implements SearchView {
     private final Map<Integer, List<Video>> mGroups = new LinkedHashMap<>();
     private final Handler mUiHandler = new Handler(Looper.getMainLooper());
     private boolean mProgressShowing;
+    private boolean mSwipeRefreshing;
     private boolean mWantSuggestions;
     private boolean mSearchSubmitted;
     private boolean mSuppressWatcher;
@@ -78,6 +81,7 @@ public class MobileSearchFragment extends Fragment implements SearchView {
 
         mSearchInput = view.findViewById(R.id.search_input);
         mResultsList = view.findViewById(R.id.results_list);
+        mSwipeRefresh = view.findViewById(R.id.swipe_refresh);
         mSuggestionsList = view.findViewById(R.id.suggestions_list);
         mProgressBar = view.findViewById(R.id.progress_bar);
         mEmptyMessage = view.findViewById(R.id.empty_message);
@@ -94,6 +98,20 @@ public class MobileSearchFragment extends Fragment implements SearchView {
         mResultsList.setLayoutManager(new GridLayoutManager(getContext(), 2));
         mResultsList.setAdapter(mResultsAdapter);
         mResultsList.addOnScrollListener(mScrollListener);
+
+        mSwipeRefresh.setColorSchemeResources(R.color.brand_accent);
+        mSwipeRefresh.setProgressBackgroundColorSchemeResource(R.color.mobile_surface);
+        mSwipeRefresh.setOnRefreshListener(() -> {
+            // Re-run the last submitted query. Nothing to refresh while the user is still
+            // typing (suggestions view) or before any search ran.
+            String query = getSearchText();
+            if (mSearchSubmitted && !TextUtils.isEmpty(query)) {
+                mSwipeRefreshing = true;
+                submitSearch(query);
+            } else {
+                stopSwipeRefresh();
+            }
+        });
 
         mTagsAdapter = new TagAdapter(this::onTagPicked);
         mSuggestionsList.setLayoutManager(new LinearLayoutManager(getContext()));
@@ -194,11 +212,23 @@ public class MobileSearchFragment extends Fragment implements SearchView {
     @Override
     public void showProgressBar(boolean show) {
         mProgressShowing = show;
+        // While pull-to-refresh is active the SwipeRefreshLayout spinner stands in for
+        // the centre bar; don't show both.
         if (mProgressBar != null) {
-            mProgressBar.setVisibility(show ? View.VISIBLE : View.GONE);
+            mProgressBar.setVisibility(show && !mSwipeRefreshing ? View.VISIBLE : View.GONE);
+        }
+        if (!show) {
+            stopSwipeRefresh();
         }
         if (!show && mSearchSubmitted && mGroups.isEmpty()) {
             showEmptyMessage(getString(R.string.mobile_search_no_results));
+        }
+    }
+
+    private void stopSwipeRefresh() {
+        mSwipeRefreshing = false;
+        if (mSwipeRefresh != null) {
+            mSwipeRefresh.setRefreshing(false);
         }
     }
 

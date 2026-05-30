@@ -274,4 +274,8 @@ dependencies {
     stmobileImplementation 'androidx.appcompat:appcompat:' + appCompatXVersion
     // Chrome Custom Tabs for the in-app sign-in browser.
     stmobileImplementation 'androidx.browser:browser:' + browserXVersion
+    // Pull-to-refresh on the phone screens. Literal version (not a constants.gradle
+    // constant) because constants.gradle lives in the SharedModules submodule, which
+    // the fork must not edit. 1.1.0 is the stable release, compatible with appcompat 1.2.0.
+    stmobileImplementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
 }
