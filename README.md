@@ -2,15 +2,37 @@
 
 **A phone and tablet YouTube client for Android.**
 
-SmarterTube is a fork of [SmartTube](https://github.com/yuliskov/SmartTube) by yuliskov. It adds a native portrait UI — drawer navigation, search, channel pages, settings, sign-in — on top of SmartTube's YouTube client engine, which is merged from upstream unchanged on every release. Upstream SmartTube is TV-only by design; this fork exists for phones and tablets.
+SmarterTube is **not a patched YouTube app and not a wrapper** — it is a native Android phone/tablet UI built on SmartTube's existing YouTube client engine.
+
+It is a fork of [SmartTube](https://github.com/yuliskov/SmartTube) by yuliskov. It adds a native portrait UI — drawer navigation, search, channel pages, settings, sign-in — on top of SmartTube's YouTube client engine, which is merged from upstream unchanged on every release. Upstream SmartTube is TV-only by design; this fork exists for phones and tablets.
 
 > **Alpha.** Core browsing and playback work. Some upstream features haven't been plumbed into the phone UI yet.
 
 <p align="center">
+  <img src="images/phone_home.png" width="270" alt="Home screen"/>
+  &nbsp;&nbsp;&nbsp;
   <img src="images/phone_drawer.png" width="270" alt="Navigation drawer"/>
   &nbsp;&nbsp;&nbsp;
   <img src="images/phone_search.png" width="270" alt="Search results"/>
 </p>
+
+---
+
+## Relationship to SmartTube
+
+SmarterTube is an **unofficial fork** of [yuliskov/SmartTube](https://github.com/yuliskov/SmartTube). The playback/client engine, ad blocking, SponsorBlock, Return YouTube Dislike and DeArrow integration — all the under-the-hood behaviour — come from upstream SmartTube, unchanged. This fork's job is to provide a native phone/tablet interface while keeping the upstream structure intact, so non-UI updates can be merged in regularly.
+
+---
+
+## Why this exists
+
+Upstream SmartTube is built for Android TV — a leanback, 10-foot, D-pad interface. Phones and tablets need touch-native navigation instead. SmarterTube adds that UI while preserving upstream compatibility, so engine and feature updates keep flowing in from SmartTube.
+
+| Project | Approach |
+|---|---|
+| SmartTube (upstream) | Android TV / leanback (10-foot) UI |
+| SmarterTube (this fork) | Native phone/tablet touch UI on SmartTube's engine |
+| App-patching tools | Patch or modify the official YouTube app itself |
 
 ---
 
@@ -29,7 +51,20 @@ Pick the APK for your device:
 
 SmarterTube installs as `app.smarttube.mobile` and is **co-installable** with the upstream SmartTube TV build (`app.smarttube`). They do not conflict.
 
-Do **not** download APKs from app stores or third-party sites.
+Official builds are published only on this GitHub Releases page unless another source is explicitly linked here.
+
+### Verifying your download
+
+Every APK on the Releases page carries a **SHA-256 digest**, shown by GitHub next to the asset. After downloading, compare it against the file on your device:
+
+```bash
+# Linux/macOS
+sha256sum SmarterTube_*.apk
+# Windows (PowerShell)
+Get-FileHash SmarterTube_*.apk -Algorithm SHA256
+```
+
+If the hash matches the one GitHub shows for that asset, the file is intact.
 
 ---
 
@@ -55,7 +90,16 @@ Do **not** download APKs from app stores or third-party sites.
 
 ---
 
-## What is not here
+## Known limitations & risks
+
+This is alpha software. Install it with that in mind:
+
+- **Alpha status** — expect rough edges, missing screens, and occasional breakage. Not all upstream features are plumbed into the phone UI yet.
+- **Upstream / YouTube breakage** — YouTube changes its private APIs without warning, which can break playback at any time. Fixes depend on upstream SmartTube's cadence, then a re-merge here.
+- **Sideload only** — no Google Play listing. Install the APK yourself from Releases; there is no auto-update.
+- **No guarantees** — this is an independent fork with no affiliation to Google/YouTube or to upstream SmartTube's author.
+
+Specific gaps:
 
 - **TV / leanback interface** — install [upstream SmartTube](https://github.com/yuliskov/SmartTube) for Android TV boxes and sticks.
 - **F-Droid listing** — not yet; sideload from Releases.
@@ -82,9 +126,9 @@ All phone-specific code lives under `smarttubetv/src/stmobile/` — no changes t
 
 ---
 
-## Upstream relationship
+## Upstream & maintenance
 
-This fork tracks [yuliskov/SmartTube](https://github.com/yuliskov/SmartTube). The YouTube client engine (MediaServiceCore, ExoPlayer, InnerTube API code) is upstream's work and is merged from upstream on every release. Bug fixes that apply to both targets are submitted upstream — see open PRs for current patches.
+The YouTube client engine (MediaServiceCore, ExoPlayer, InnerTube API code) is upstream's work and is merged from [yuliskov/SmartTube](https://github.com/yuliskov/SmartTube) on every release. Bug fixes that apply to both the TV and phone targets are submitted upstream rather than kept here — see open PRs for current patches. (Code layout is described under [Building](#building).)
 
 Licensed under [MIT](LICENSE), same as upstream.
 
