@@ -278,4 +278,10 @@ dependencies {
     // constant) because constants.gradle lives in the SharedModules submodule, which
     // the fork must not edit. 1.1.0 is the stable release, compatible with appcompat 1.2.0.
     stmobileImplementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
+    // okhttp on the compile classpath so the phone About screen's update check can reuse
+    // the app's shared OkHttpManager client (its doGetRequest returns okhttp3.Response).
+    // Same version sharedutils already pulls in at runtime (root build.gradle force-resolves
+    // okhttp to okhttpVersion), so this only exposes the type for compilation — no new
+    // artifact or version drift.
+    stmobileImplementation 'com.squareup.okhttp3:okhttp:' + okhttpVersion
 }

@@ -23,6 +23,14 @@
     <string name="mobile_about_link_fork">Fork: github.com/CodeSculptor/SmarterTube</string>
     <string name="mobile_about_url_upstream" translatable="false">https://github.com/yuliskov/SmartTube</string>
     <string name="mobile_about_url_fork" translatable="false">https://github.com/CodeSculptor/SmarterTube</string>
+    <string name="mobile_about_check_updates">Check for updates</string>
+    <string name="mobile_about_checking">Checking…</string>
+    <string name="mobile_about_up_to_date">You\'re up to date (%1$s).</string>
+    <string name="mobile_about_update_available">Update available: %1$s</string>
+    <string name="mobile_about_check_failed">Couldn\'t check for updates. Check your connection and try again.</string>
+    <string name="mobile_about_open_releases">Open releases</string>
+    <string name="mobile_about_url_releases" translatable="false">https://github.com/CodeSculptor/SmarterTube/releases</string>
+    <string name="mobile_about_url_releases_api" translatable="false">https://api.github.com/repos/CodeSculptor/SmarterTube/releases/latest</string>
 
     <!-- Theme picker (light/dark) -->
     <string name="mobile_theme_title">Theme</string>
