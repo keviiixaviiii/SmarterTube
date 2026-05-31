@@ -191,8 +191,12 @@ android {
             // lower code for in-place upgrade). Upstream's code did not move with
             // its versionName from 31.70->31.77, so we just increment past the
             // last shipped fork code (alpha3 = 23703) rather than recomputing.
+            // alpha4 (23704): pre-beta1 maintenance release — 3 of beta1's 4
+            // features (theme, pull-to-refresh, tablet grid) plus user-tested bug
+            // fixes (About update check, shelf scroll, sign-in→Home). beta1 awaits
+            // the 4th feature (voice search); it will take the next free code 23705.
             versionCode 23704
-            versionName "31.77-mobile-beta1"
+            versionName "31.77-mobile-alpha4"
         }
     }
 }
