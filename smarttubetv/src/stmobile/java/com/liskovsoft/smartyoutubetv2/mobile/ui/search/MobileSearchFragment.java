@@ -1,10 +1,14 @@
 package com.liskovsoft.smartyoutubetv2.mobile.ui.search;
 
+import android.app.Activity;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.speech.RecognizerIntent;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
@@ -16,6 +20,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -50,6 +55,7 @@ import java.util.Map;
  * just its own slice.
  */
 public class MobileSearchFragment extends Fragment implements SearchView {
+    private static final int REQUEST_VOICE_SEARCH = 1001;
     private SearchPresenter mPresenter;
     private EditText mSearchInput;
     private RecyclerView mResultsList;
@@ -93,6 +99,7 @@ public class MobileSearchFragment extends Fragment implements SearchView {
             }
         });
         view.findViewById(R.id.btn_clear).setOnClickListener(v -> mSearchInput.setText(""));
+        view.findViewById(R.id.btn_voice).setOnClickListener(v -> startVoiceRecognition());
 
         int span = getResources().getInteger(R.integer.mobile_grid_span);
         int cardWidth = getResources().getDisplayMetrics().widthPixels / span;
@@ -254,8 +261,43 @@ public class MobileSearchFragment extends Fragment implements SearchView {
 
     @Override
     public void startVoiceRecognition() {
-        // Native voice search is a later polish item; fall back to the keyboard.
-        focusSearchField();
+        // Intent-based recognition: Google's speech UI runs in its own process and handles
+        // the mic permission itself, so the app needs no RECORD_AUDIO permission. If no
+        // recognizer is installed, fall back to the keyboard.
+        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, getString(R.string.mobile_search_voice_prompt));
+        try {
+            startActivityForResult(intent, REQUEST_VOICE_SEARCH);
+        } catch (ActivityNotFoundException e) {
+            Toast.makeText(getContext(), R.string.mobile_search_voice_unavailable,
+                    Toast.LENGTH_SHORT).show();
+            focusSearchField();
+        }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode != REQUEST_VOICE_SEARCH || resultCode != Activity.RESULT_OK || data == null) {
+            return;
+        }
+        List<String> results = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+        if (results == null || results.isEmpty()) {
+            return;
+        }
+        String spoken = results.get(0);
+        if (TextUtils.isEmpty(spoken)) {
+            return;
+        }
+        // Mirror onTagPicked: set the field without re-triggering the suggestions watcher,
+        // then run the search.
+        mSuppressWatcher = true;
+        mSearchInput.setText(spoken);
+        mSearchInput.setSelection(spoken.length());
+        mSuppressWatcher = false;
+        submitSearch(spoken);
     }
 
     @Override
