@@ -59,6 +59,21 @@ public class VideoCardAdapter extends RecyclerView.Adapter<VideoCardAdapter.View
         notifyDataSetChanged();
     }
 
+    /**
+     * Append a continuation's new tail with a range-insert instead of a full
+     * {@code notifyDataSetChanged}. Used by shelves so a horizontally-scrolled row keeps
+     * its scroll position when more items page in — a full reset (or re-setting the
+     * adapter on the row) would snap the shelf back to the start.
+     */
+    public void appendVideos(List<Video> videos) {
+        if (videos == null || videos.isEmpty()) {
+            return;
+        }
+        int start = mVideos.size();
+        mVideos.addAll(videos);
+        notifyItemRangeInserted(start, videos.size());
+    }
+
     public void clear() {
         mVideos.clear();
         notifyDataSetChanged();

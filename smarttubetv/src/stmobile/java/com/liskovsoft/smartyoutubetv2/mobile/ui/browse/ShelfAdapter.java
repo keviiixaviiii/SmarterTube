@@ -63,9 +63,21 @@ public class ShelfAdapter extends RecyclerView.Adapter<ShelfAdapter.ViewHolder> 
     public void appendGroup(VideoGroup group) {
         int idx = mIds.indexOf(group.getId());
         if (idx >= 0) {
-            mAdapters.get(idx).setVideos(group.getVideos());
+            // Continuation of an existing shelf. Append only the new tail to the inner
+            // adapter via a range-insert, and do NOT notifyItemChanged on the outer row:
+            // re-binding the row re-runs onBindViewHolder -> holder.list.setAdapter(...),
+            // which snaps the shelf's horizontal scroll back to the start (the "first
+            // sideways swipe resets" bug).
+            VideoCardAdapter adapter = mAdapters.get(idx);
+            List<Video> all = group.getVideos();
+            int oldCount = adapter.getItemCount();
+            if (all != null && all.size() > oldCount) {
+                adapter.appendVideos(all.subList(oldCount, all.size()));
+            } else if (all != null && all.size() < oldCount) {
+                // Shrunk (a refresh, not a continuation) — full replace; no scroll to keep.
+                adapter.setVideos(all);
+            }
             mGroups.set(idx, group);
-            notifyItemChanged(idx);
         } else {
             VideoCardAdapter adapter = new VideoCardAdapter(mCardWidth, mClick, mLongClick);
             adapter.setVideos(group.getVideos());
