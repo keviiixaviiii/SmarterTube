@@ -65,6 +65,7 @@ public class MobileBrowseFragment extends Fragment implements BrowseView {
     private SettingsItemAdapter mSettingsAdapter;
     private boolean mProgressShowing;
     private boolean mSwipeRefreshing;
+    private boolean mSectionSelected;
     private int mGridCardWidth;
     private int mGridSpan;
     private int mShelfCardWidth;
@@ -175,7 +176,22 @@ public class MobileBrowseFragment extends Fragment implements BrowseView {
     public void addSection(int index, BrowseSection section) {
         if (mSectionAdapter != null && section != null) {
             mSectionAdapter.add(index, section);
+            // Auto-open a default section so the user lands on videos rather than an empty
+            // "pick a section" Home — notably after sign-in, where the section list is
+            // rebuilt. Deferred via post() so a presenter-driven selection during the same
+            // load wins (it sets mSectionSelected first); otherwise we open the first
+            // section (the Home feed). Re-arms on removeAllSections (a full refresh).
+            if (!mSectionSelected && mContentList != null) {
+                mContentList.post(this::autoSelectDefaultSection);
+            }
         }
+    }
+
+    private void autoSelectDefaultSection() {
+        if (mSectionSelected || mSectionAdapter == null || mSectionAdapter.getItemCount() == 0) {
+            return;
+        }
+        selectSection(0, false);
     }
 
     @Override
@@ -190,6 +206,8 @@ public class MobileBrowseFragment extends Fragment implements BrowseView {
         if (mSectionAdapter != null) {
             mSectionAdapter.clear();
         }
+        // Section list is being rebuilt — re-arm the default-section auto-open.
+        mSectionSelected = false;
     }
 
     @Override
@@ -198,6 +216,7 @@ public class MobileBrowseFragment extends Fragment implements BrowseView {
             return;
         }
         BrowseSection section = mSectionAdapter.getItem(index);
+        mSectionSelected = true;
         mSectionAdapter.setSelected(section);
         if (mToolbarTitle != null) {
             mToolbarTitle.setText(section.getTitle());
@@ -271,7 +290,17 @@ public class MobileBrowseFragment extends Fragment implements BrowseView {
                     R.drawable.settings_theme));
         }
         if (upstreamItems != null) {
-            items.addAll(upstreamItems);
+            // Drop upstream's "About" row: it's the TV-oriented About panel (dead
+            // "Check for updates", the meaningless ATV/Amazon "global search" bridge). The
+            // phone build's own About screen in the drawer footer (MobileAboutActivity) is
+            // the single About surface.
+            String aboutTitle = context != null ? context.getString(R.string.settings_about) : null;
+            for (SettingsItem item : upstreamItems) {
+                if (aboutTitle != null && aboutTitle.equals(item.title)) {
+                    continue;
+                }
+                items.add(item);
+            }
         }
         return items;
     }

@@ -21,12 +21,17 @@ import androidx.fragment.app.Fragment;
 import java.util.Arrays;
 import java.util.List;
 
+import com.liskovsoft.mediaserviceinterfaces.data.MediaGroup;
+import com.liskovsoft.mediaserviceinterfaces.oauth.Account;
+import com.liskovsoft.smartyoutubetv2.common.app.presenters.BrowsePresenter;
 import com.liskovsoft.smartyoutubetv2.common.app.presenters.SignInPresenter;
 import com.liskovsoft.smartyoutubetv2.common.app.presenters.YTSignInPresenter;
 import com.liskovsoft.smartyoutubetv2.common.app.views.SignInView;
 import com.liskovsoft.smartyoutubetv2.common.utils.Utils;
 import com.liskovsoft.smartyoutubetv2.mobile.ui.browse.MobileBrowseActivity;
+import com.liskovsoft.smartyoutubetv2.mobile.ui.dialogs.MobileAppDialogActivity;
 import com.liskovsoft.smartyoutubetv2.tv.R;
+import com.liskovsoft.youtubeapi.service.YouTubeServiceManager;
 
 /**
  * Single-phone sign-in screen. Implements {@link SignInView}, driven directly by
@@ -50,6 +55,17 @@ public class MobileSignInFragment extends Fragment implements SignInView {
     private TextView mErrorBody;
     private boolean mBrowserLaunched;
     private String mFullSignInUrl;
+
+    // Bounded auto-retry of the user-code fetch. The device-code flow occasionally errors
+    // on a transient OS-resolver miss (UnknownHostException) — the app's network stack is
+    // fine (Home loads), it's a momentary DNS blip. Rather than dump the user straight to
+    // the "Sign-in failed" screen, silently re-arm the flow a few times with a short
+    // backoff first. Only applies BEFORE the browser is launched (a pre-approval failure to
+    // even get a code); errors after that fall through to the manual error screen.
+    private static final int MAX_AUTO_RETRIES = 3;
+    private static final long AUTO_RETRY_DELAY_MS = 2000;
+    private int mAutoRetries;
+    private final android.os.Handler mHandler = new android.os.Handler(android.os.Looper.getMainLooper());
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -93,6 +109,7 @@ public class MobileSignInFragment extends Fragment implements SignInView {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        mHandler.removeCallbacksAndMessages(null);
         if (mPresenter != null) {
             mPresenter.onViewDestroyed();
         }
@@ -113,6 +130,14 @@ public class MobileSignInFragment extends Fragment implements SignInView {
         // signInUrl and the error message in the userCode slot (see
         // YTSignInPresenter.updateUserCode -> error -> showCode(error.getMessage(), "")).
         if (TextUtils.isEmpty(signInUrl) && fullSignInUrl == null) {
+            // Transient failure before the user ever opened the browser (e.g. a momentary
+            // DNS miss fetching the user code): silently re-arm a few times before giving
+            // up to the manual error screen.
+            if (!mBrowserLaunched && mAutoRetries < MAX_AUTO_RETRIES) {
+                mAutoRetries++;
+                mHandler.postDelayed(this::reArmSignIn, AUTO_RETRY_DELAY_MS);
+                return;
+            }
             showError(userCode);
             return;
         }
@@ -120,6 +145,7 @@ public class MobileSignInFragment extends Fragment implements SignInView {
             return;
         }
 
+        mAutoRetries = 0; // got a code — reset the budget for any later re-arm
         hideError();
         mFullSignInUrl = fullSignInUrl != null
                 ? fullSignInUrl
@@ -162,6 +188,7 @@ public class MobileSignInFragment extends Fragment implements SignInView {
         if (mPresenter == null) {
             return;
         }
+        mAutoRetries = 0; // manual retry restores the auto-retry budget
         mBrowserLaunched = false;
         hideError();
         mBrowserButton.setEnabled(false);
@@ -169,12 +196,62 @@ public class MobileSignInFragment extends Fragment implements SignInView {
         mPresenter.onViewInitialized();
     }
 
+    /**
+     * Silent re-arm used by the bounded auto-retry: unlike {@link #retrySignIn()} it does
+     * not reset the retry budget or touch the (still hidden) error UI — it just re-runs the
+     * device-code fetch. Guards on still being added in case the user left during backoff.
+     */
+    private void reArmSignIn() {
+        if (mPresenter == null || !isAdded()) {
+            return;
+        }
+        mPresenter.onViewInitialized();
+    }
+
     @Override
     public void close() {
-        returnToApp();
+        // Sign-in succeeded. Land on a clean Home: CLEAR_TOP finishes everything stacked
+        // above the Home root — this sign-in screen AND any Settings/Accounts dialog the
+        // sign-in was launched from — so the account-selection dialog the presenter opens
+        // next sits over Home, and dismissing it returns to Home, not a stale Settings page.
+        // (returnToApp()'s REORDER_TO_FRONT only reorders and would leave that Settings
+        // dialog in the back stack; it stays for the manual "Done" button, which needs to
+        // pull our task above the Chrome Custom Tab.)
         Activity activity = getActivity();
-        if (activity != null) {
-            activity.finish();
+        if (activity == null) {
+            return;
+        }
+
+        // Right after this returns, YTSignInPresenter force-shows the account-selection
+        // dialog (show(true)) — even for a single account. On a fresh single-account
+        // sign-in that picker is redundant (the service already auto-selected the new
+        // account), and dismissing it strands the user on whatever section Home last
+        // showed (Settings). Suppress that one redundant dialog when there's <=1 account;
+        // MobileAppDialogActivity consumes the one-shot flag and finishes itself. With 2+
+        // accounts we leave the picker so the user can choose.
+        if (accountCount() <= 1) {
+            MobileAppDialogActivity.suppressNextDialog();
+        }
+
+        Intent intent = new Intent(activity, MobileBrowseActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        activity.startActivity(intent);
+        activity.finish();
+
+        // Force Home onto the Home feed regardless of which section (e.g. Settings) was
+        // showing when sign-in began — this is the equivalent of tapping the Home menu
+        // item. No-ops safely if Home isn't ready yet; MobileBrowseFragment's
+        // autoSelectDefaultSection is the backstop.
+        BrowsePresenter.instance(activity).selectSection(MediaGroup.TYPE_HOME);
+    }
+
+    /** Read-only count of stored accounts; 0 if the service isn't available. */
+    private int accountCount() {
+        try {
+            List<Account> accounts = YouTubeServiceManager.instance().getSignInService().getAccounts();
+            return accounts != null ? accounts.size() : 0;
+        } catch (Exception e) {
+            return 0;
         }
     }
 
