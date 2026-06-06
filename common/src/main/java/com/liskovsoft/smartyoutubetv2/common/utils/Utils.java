@@ -88,6 +88,7 @@ import com.liskovsoft.smartyoutubetv2.common.prefs.BlockedChannelData;
 import com.liskovsoft.smartyoutubetv2.common.prefs.GeneralData;
 import com.liskovsoft.smartyoutubetv2.common.prefs.HiddenPrefs;
 import com.liskovsoft.smartyoutubetv2.common.prefs.MainUIData;
+import com.liskovsoft.smartyoutubetv2.common.prefs.NetworkData;
 import com.liskovsoft.smartyoutubetv2.common.prefs.PlayerData;
 import com.liskovsoft.smartyoutubetv2.common.prefs.PlayerTweaksData;
 import com.liskovsoft.smartyoutubetv2.common.prefs.RemoteControlData;
@@ -106,16 +107,15 @@ public class Utils {
             "com.teamsmart.videomanager.tv",
             "org.smarttube.beta",
             "org.smarttube.stable",
-            "org.smarttube.fdroid",
             "app.smarttube.fdroid",
     };
-    public static final String[] BACKUP_PATTERNS = {
+    public static final String[] BACKUP_PREFS = {
             "yt_service_prefs.xml",
             "com.liskovsoft.appupdatechecker2.preferences.xml",
             "com.liskovsoft.sharedutils.prefs.GlobalPreferences.xml",
             "_preferences.xml" // before _ should be the app package name
     };
-    public static final String[] BACKUP_DIR_PATTERNS = {
+    public static final String[] BACKUP_DIRS = {
             "app_prefs",
             "yt_service_prefs",
             "global_prefs"
@@ -1303,5 +1303,6 @@ public class Utils {
         MediaServiceData mediaServiceData = MediaServiceData.instance();
         mediaServiceData.persistNow();
         BlockedChannelData.instance(context).persistNow();
+        NetworkData.instance(context).persistNow();
     }
 }

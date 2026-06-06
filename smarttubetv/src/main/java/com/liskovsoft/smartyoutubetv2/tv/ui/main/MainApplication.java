@@ -1,10 +1,7 @@
 package com.liskovsoft.smartyoutubetv2.tv.ui.main;
 
-import android.os.Build;
-
 import androidx.multidex.MultiDexApplication;
 
-import com.liskovsoft.sharedutils.helpers.AppInfoHelpers;
 import com.liskovsoft.sharedutils.helpers.Helpers;
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.BrowseSection;
 import com.liskovsoft.smartyoutubetv2.common.app.presenters.BrowsePresenter;
@@ -19,6 +16,8 @@ import com.liskovsoft.smartyoutubetv2.common.app.views.SignInView;
 import com.liskovsoft.smartyoutubetv2.common.app.views.SplashView;
 import com.liskovsoft.smartyoutubetv2.common.app.views.ViewManager;
 import com.liskovsoft.smartyoutubetv2.common.app.views.WebBrowserView;
+import com.liskovsoft.smartyoutubetv2.common.prefs.GeneralData;
+import com.liskovsoft.smartyoutubetv2.common.prefs.NetworkData;
 import com.liskovsoft.smartyoutubetv2.common.prefs.PlayerData;
 import com.liskovsoft.smartyoutubetv2.common.prefs.PlayerTweaksData;
 import com.liskovsoft.smartyoutubetv2.tv.ui.adddevice.AddDeviceActivity;
@@ -56,12 +55,13 @@ public class MainApplication extends MultiDexApplication { // fix: Didn't find c
         // ByeByeDPI fix
         // https://android-review.googlesource.com/c/platform/external/conscrypt/+/89408/
         // NOTE: Android 10+ (API 29+) uses system Conscrypt TLS; custom Security providers are unnecessary
-        if (Build.VERSION.SDK_INT < 29 && Conscrypt.isAvailable()) {
-            Security.insertProviderAt(Conscrypt.newProvider(), 1);
-        }
-        //if (Conscrypt.isAvailable()) {
+        // NOTE: May cause 'Unexpected playback error null'
+        //if (Build.VERSION.SDK_INT < 29 && Conscrypt.isAvailable()) {
         //    Security.insertProviderAt(Conscrypt.newProvider(), 1);
         //}
+        if (NetworkData.instance(getApplicationContext()).isConscryptEnabled() && Conscrypt.isAvailable()) {
+            Security.insertProviderAt(Conscrypt.newProvider(), 1);
+        }
 
         setupGlobalExceptionHandler();
         setupViewManager();
