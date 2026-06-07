@@ -193,8 +193,8 @@ android {
             // last shipped fork code (alpha3 = 23703) rather than recomputing.
             // alpha4 (23704): pre-beta1 maintenance release — 3 of beta1's 4
             // features (theme, pull-to-refresh, tablet grid) plus user-tested bug
-            versionCode 23705
-            versionName "31.77-mobile-beta1"
+            versionCode 23706
+            versionName "31.88-mobile-1.0"
         }
     }
 }
