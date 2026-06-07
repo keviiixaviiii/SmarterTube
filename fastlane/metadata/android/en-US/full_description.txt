@@ -1,17 +1,22 @@
-SmarterTube is a phone and tablet YouTube client built on top of the SmartTube TV app (yuliskov/SmartTube). It adds a native portrait-mode UI while leaving all TV functionality intact and staying upstream-mergeable.
+SmarterTube is an ad-free YouTube client for Android phones and tablets, built on the SmartTube engine (yuliskov/SmartTube).
 
-<b>What's different from SmartTube TV</b>
-• Native phone/portrait layout — Home, Search, Channel, and Settings all open in mobile-friendly screens instead of the TV leanback UI.
-• Tablet support — multi-column grid that adapts to sw600dp+ screens with correct landscape/portrait switching.
-• Co-installable alongside the SmartTube TV app (separate package: app.smarttube.mobile).
+It is a companion to SmartTube, not a replacement. SmartTube targets Android TV and set-top boxes; SmarterTube brings a native phone and tablet experience to the same engine. If you are on a TV or set-top device, install the original SmartTube instead.
 
-<b>What's the same</b>
-• All SmartTube TV features: ad-free playback, SponsorBlock, Return YouTube Dislike, background play, PiP, voice search, subscriptions.
-• No Google account required to browse; sign-in is optional and handled through SmartTube's existing flow.
+<b>What SmarterTube adds</b>
+• A native portrait UI for phones — Home, Search, Channel, and Settings open in touch-friendly mobile screens instead of a remote-driven TV layout.
+• Tablet support — an adaptive multi-column grid that adjusts to screen size and handles rotation.
+
+<b>Built on SmartTube, so you also get</b>
+• Ad-free playback, SponsorBlock, and Return YouTube Dislike.
+• Background play, picture-in-picture, voice search, and subscriptions.
+• No Google account required to browse; sign-in is optional.
 • No Google Play Services required.
 
+<b>Compatibility</b>
+Android 4.2 and newer, on phones and tablets with a touchscreen. Not available for iPhone or iPad, and not designed for Android TV or set-top boxes.
+
 <b>Permissions</b>
-Zero app-declared permissions beyond what SmartTube TV already ships. Voice search uses the system recognizer intent (runs in Google's process — no RECORD_AUDIO permission required from this app).
+Zero app-declared permissions. Voice search uses the system recognizer (it runs in Google's process, so this app requests no microphone permission).
 
 <b>Source &amp; attribution</b>
-Fork of yuliskov/SmartTube (MIT). All SmartTube TV functionality is unchanged; this fork adds only the phone/tablet UI layer. Tracks upstream SmartTube; this release based on SmartTube 31.88.
+Fork of yuliskov/SmartTube (MIT). The upstream SmartTube code is used unmodified; SmarterTube only adds the phone and tablet UI layer. This release is based on SmartTube 31.88.

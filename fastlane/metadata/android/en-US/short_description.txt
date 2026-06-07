@@ -1,1 +1,1 @@
-Phone & tablet YouTube client — native portrait UI, forked from SmartTube.
+Ad-free YouTube for Android phones & tablets — a SmartTube companion build.
