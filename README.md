@@ -9,11 +9,15 @@ It is a fork of [SmartTube](https://github.com/yuliskov/SmartTube) by yuliskov. 
 > **1.0.** A complete native phone & tablet UI — Home, Search (with voice), Channel, Channel Uploads, Settings, sign-in, and playback — built on SmartTube's YouTube engine. Unlike app-modifiers, these are real native Android screens, not a repackaged YouTube APK.
 
 <p align="center">
-  <img src="images/phone_home.png" width="270" alt="Home screen"/>
+  <img src="images/phone_browse.png" width="260" alt="Browsing music charts and trending videos"/>
   &nbsp;&nbsp;&nbsp;
-  <img src="images/phone_drawer.png" width="270" alt="Navigation drawer"/>
+  <img src="images/phone_search.png" width="260" alt="Search with voice button and results grid"/>
   &nbsp;&nbsp;&nbsp;
-  <img src="images/phone_search.png" width="270" alt="Search results"/>
+  <img src="images/phone_drawer.png" width="260" alt="Navigation drawer"/>
+</p>
+
+<p align="center">
+  <img src="images/phone_player.png" width="640" alt="Video player with SponsorBlock, Return YouTube Dislike, and up to 1080/60"/>
 </p>
 
 ---
@@ -72,7 +76,7 @@ If the hash matches the one GitHub shows for that asset, the file is intact.
 
 ### Phone UI (this fork adds)
 - Portrait home screen with drawer navigation (Home, Shorts, Kids, Sports, LIVE, Gaming, News, Music, Channels, Subscriptions, History, Playlists, My videos)
-- Search with suggestions and results grid
+- Search with suggestions and results grid, plus voice search
 - Channel pages and channel uploads
 - Portrait settings screen
 - Sign in / sign out — multiple accounts, OAuth device-code flow via in-app browser tab
@@ -104,7 +108,6 @@ Specific gaps:
 - **TV / leanback interface** — install [upstream SmartTube](https://github.com/yuliskov/SmartTube) for Android TV boxes and sticks.
 - **F-Droid listing** — not yet; sideload from Releases.
 - **Casting / Chromecast** — not plumbed into the phone UI.
-- **Voice search** — keyboard search only.
 
 ---
 
