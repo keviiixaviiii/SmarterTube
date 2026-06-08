@@ -79,7 +79,7 @@ If the hash matches the one GitHub shows for that asset, the file is intact.
 - Search with suggestions and results grid, plus voice search
 - Channel pages and channel uploads
 - Portrait settings screen
-- Sign in / sign out — OAuth device-code flow via in-app browser tab (multiple accounts managed in Settings)
+- Sign in / sign out — OAuth device-code flow via in-app browser tab. Switch between multiple accounts with one tap on the toolbar avatar (long-press for account management), or from Settings
 - About screen (drawer footer)
 - Playback: landscape for regular videos, portrait for Shorts
 
