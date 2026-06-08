@@ -113,7 +113,7 @@ Specific gaps:
 
 ## Building
 
-Requires JDK 11 and Android SDK.
+Requires JDK 17 and Android SDK.
 
 ```bash
 # Debug

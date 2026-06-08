@@ -33,7 +33,7 @@ with the upstream commit list in the body. Review:
 1. Read the upstream commit list — anything that looks like a UI/UX or playback change is worth eyeballing.
 2. Let CI run (`stmobile-validate` builds the APK).
 3. Side-load the debug APK and smoke-test: home loads, search works, playback works, sign-in works.
-4. Merge and tag a new fork release (see [release-signing memory](../) or `release_signing.md`).
+4. Merge and tag a new fork release (see [When to bump the version](#when-to-bump-the-version)).
 
 ## What conflict merges look like
 
@@ -61,7 +61,7 @@ Then let `stmobile-validate` run, smoke-test, merge.
 
 If `stmobile-validate` flags a missing integration point on a PR:
 
-- **Point 1 missing** → restore the `stmobile { ... }` block in `smarttubetv/build.gradle` with `applicationIdSuffix ".mobile"`, `matchingFallbacks ['ststable']`, the `targetSdkVersion`, and the `versionCode`/`versionName` lines (per [release-signing memory](../) — convention is `upstream * 10 + fork iteration`).
+- **Point 1 missing** → restore the `stmobile { ... }` block in `smarttubetv/build.gradle` with `applicationIdSuffix ".mobile"`, `matchingFallbacks ['ststable']`, the `targetSdkVersion`, and the `versionCode`/`versionName` lines (convention is `upstream * 10 + fork iteration`; see [When to bump the version](#when-to-bump-the-version)).
 - **Point 2 missing** → restore the `stmobile { matchingFallbacks ['ststable'] }` block in `common/build.gradle`.
 - **Point 3 missing** → widen `MainApplication.setupViewManager()` from `private` back to `protected`.
 
@@ -78,4 +78,4 @@ Each upstream version bump (`31.70` → `31.71`) is a fork release boundary. Con
 - `versionName` = `<upstream>-mobile-<maturity><n>` (e.g. `31.71-mobile-alpha1`, `31.70-mobile-beta1`).
 - Bump in the `stmobile` flavor block of `smarttubetv/build.gradle` only — never in `defaultConfig` (that's upstream's).
 
-After a clean merge and bump, follow the release-signing memory: `assembleStmobileRelease`, tag, `gh release create --prerelease` with the 4 ABI APKs.
+After a clean merge and bump: `assembleStmobileRelease`, tag, then `gh release create --prerelease` with the 4 ABI APKs.
