@@ -106,9 +106,9 @@ If the hash matches the one GitHub shows for that asset, the file is intact.
 
 ## Known limitations & risks
 
-This is alpha software. Install it with that in mind:
+SmarterTube is at 1.0, but a few realities are worth knowing before you install:
 
-- **Alpha status** — expect rough edges, missing screens, and occasional breakage. Not all upstream features are plumbed into the phone UI yet.
+- **Not all upstream features are surfaced yet** — the phone UI covers the core journey (Home, Search, Channel, Settings, sign-in, playback); some upstream options remain reachable only through the settings screens, and a few aren't wired into the phone UI at all.
 - **Upstream / YouTube breakage** — YouTube changes its private APIs without warning, which can break playback at any time. Fixes depend on upstream SmartTube's cadence, then a re-merge here.
 - **Sideload only** — not on any app store. Install the APK yourself from Releases, or use [Obtainium](#auto-updates-via-obtainium) to install and auto-update directly from GitHub.
 - **No guarantees** — this is an independent fork with no affiliation to Google/YouTube or to upstream SmartTube's author.
