@@ -78,7 +78,7 @@ Then let `stmobile-validate` run, smoke-test, merge.
 
 If `stmobile-validate` flags a missing integration point on a PR:
 
-- **Point 1 missing** → restore the `stmobile { ... }` block in `smarttubetv/build.gradle` with `applicationIdSuffix ".mobile"`, `matchingFallbacks ['ststable']`, the `targetSdkVersion`, and the `versionCode`/`versionName` lines (convention is `upstream * 10 + fork iteration`; see [When to bump the version](#when-to-bump-the-version)).
+- **Point 1 missing** → restore the `stmobile { ... }` block in `smarttubetv/build.gradle` with `applicationIdSuffix ".mobile"`, `matchingFallbacks ['ststable']`, the `targetSdkVersion`, and the `versionCode`/`versionName` lines (increment the fork `versionCode` monotonically; see [When to bump the version](#when-to-bump-the-version)).
 - **Point 2 missing** → restore the `stmobile { matchingFallbacks ['ststable'] }` block in `common/build.gradle`.
 - **Point 3 missing** → widen `MainApplication.setupViewManager()` from `private` back to `protected`.
 
@@ -91,8 +91,8 @@ If the build step fails:
 
 Each upstream version bump (`31.70` → `31.71`) is a fork release boundary. Convention:
 
-- `versionCode` = upstream code × 10 + fork iteration (`31.70` → 2370 → `23700 + n`).
-- `versionName` = `<upstream>-mobile-<maturity><n>` (e.g. `31.71-mobile-alpha1`, `31.70-mobile-beta1`).
+- `versionCode` — increment **monotonically by 1** past the last shipped fork release; it is *independent* of the upstream code. (The old `upstream × 10` rule was abandoned at 31.77, when upstream's own `versionCode` stopped tracking its `versionName`. Shipped so far: alpha1–4 = 23701–23704, beta1 = 23705, 1.0 = 23706, 1.1 = 23707 — so the next release is **23708**.)
+- `versionName` = `<upstream>-mobile-<maturity>` (e.g. `31.90-mobile-1.1`; earlier `31.77-mobile-beta1`). Maturity is now a semantic `<major>.<minor>`, not `alpha`/`beta`.
 - Bump in the `stmobile` flavor block of `smarttubetv/build.gradle` only — never in `defaultConfig` (that's upstream's).
 
-After a clean merge and bump: `assembleStmobileRelease`, tag, then `gh release create --prerelease` with the 4 ABI APKs.
+After a clean merge and bump: `assembleStmobileRelease`, tag, then `gh release create` with the 4 ABI APKs. Use `--prerelease` **only** for alpha/beta builds; drop it for stable `1.x` releases.

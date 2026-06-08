@@ -6,7 +6,7 @@ SmarterTube is **not a patched YouTube app and not a wrapper** — it is a nativ
 
 It is a fork of [SmartTube](https://github.com/yuliskov/SmartTube) by yuliskov. It adds a native portrait UI — drawer navigation, search, channel pages, settings, sign-in — on top of SmartTube's YouTube client engine, which is merged from upstream unchanged on every release. Upstream SmartTube is TV-only by design; this fork exists for phones and tablets.
 
-> **1.0.** A complete native phone & tablet UI — Home, Search (with voice), Channel, Channel Uploads, Settings, sign-in, and playback — built on SmartTube's YouTube engine. Unlike app-modifiers, these are real native Android screens, not a repackaged YouTube APK.
+> **Stable.** A complete native phone & tablet UI — Home, Search (with voice), Channel, Channel Uploads, Settings, sign-in, and playback — built on SmartTube's YouTube engine. Unlike app-modifiers, these are real native Android screens, not a repackaged YouTube APK.
 
 <p align="center">
   <img src="images/phone_browse.png" width="260" alt="Browsing music charts and trending videos"/>
@@ -106,7 +106,7 @@ If the hash matches the one GitHub shows for that asset, the file is intact.
 
 ## Known limitations & risks
 
-SmarterTube is at 1.0, but a few realities are worth knowing before you install:
+SmarterTube is a stable release, but a few realities are worth knowing before you install:
 
 - **Not all upstream features are surfaced yet** — the phone UI covers the core journey (Home, Search, Channel, Settings, sign-in, playback); some upstream options remain reachable only through the settings screens, and a few aren't wired into the phone UI at all.
 - **Upstream / YouTube breakage** — YouTube changes its private APIs without warning, which can break playback at any time. Fixes depend on upstream SmartTube's cadence, then a re-merge here.

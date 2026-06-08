@@ -186,13 +186,13 @@ android {
             targetSdkVersion 33
             // Phone-port versioning. Lives in the flavor (not defaultConfig) so
             // upstream merges don't conflict on versionCode/versionName lines.
-            // versionCode tracks ~ upstream code * 10 + fork iteration, but MUST
-            // increase monotonically across our own releases (Android rejects a
-            // lower code for in-place upgrade). Upstream's code did not move with
-            // its versionName from 31.70->31.77, so we just increment past the
-            // last shipped fork code (alpha3 = 23703) rather than recomputing.
-            // alpha4 (23704): pre-beta1 maintenance release — 3 of beta1's 4
-            // features (theme, pull-to-refresh, tablet grid) plus user-tested bug
+            // versionCode is INDEPENDENT of upstream's code: just increment it by
+            // 1 past the last shipped fork release (Android rejects a lower code
+            // for in-place upgrade). The old "upstream * 10" rule was dropped at
+            // 31.77 (upstream's code stopped tracking its versionName).
+            // History: alpha1-4 = 23701-23704, beta1 = 23705, 1.0 = 23706,
+            // 1.1 = 23707 → next is 23708.
+            // versionName = "<upstream>-mobile-<major>.<minor>".
             versionCode 23707
             versionName "31.90-mobile-1.1"
         }

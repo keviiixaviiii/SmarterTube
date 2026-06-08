@@ -19,4 +19,4 @@ Android 4.2 and newer, on phones and tablets with a touchscreen. Not available f
 Zero app-declared permissions. Voice search uses the system recognizer (it runs in Google's process, so this app requests no microphone permission).
 
 <b>Source &amp; attribution</b>
-Fork of yuliskov/SmartTube (MIT). The upstream SmartTube code is used unmodified; SmarterTube only adds the phone and tablet UI layer. This release is based on SmartTube 31.88.
+Fork of yuliskov/SmartTube (MIT). The upstream SmartTube code is used unmodified; SmarterTube only adds the phone and tablet UI layer, re-merged from upstream on each release. See the release notes for the exact upstream version a given build is based on.
