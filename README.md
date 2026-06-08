@@ -79,7 +79,7 @@ If the hash matches the one GitHub shows for that asset, the file is intact.
 - Search with suggestions and results grid, plus voice search
 - Channel pages and channel uploads
 - Portrait settings screen
-- Sign in / sign out — multiple accounts, OAuth device-code flow via in-app browser tab
+- Sign in / sign out — OAuth device-code flow via in-app browser tab (multiple accounts managed in Settings)
 - About screen (drawer footer)
 - Playback: landscape for regular videos, portrait for Shorts
 
@@ -107,7 +107,7 @@ Specific gaps:
 
 - **TV / leanback interface** — install [upstream SmartTube](https://github.com/yuliskov/SmartTube) for Android TV boxes and sticks.
 - **F-Droid listing** — not yet; sideload from Releases.
-- **Casting / Chromecast** — not plumbed into the phone UI.
+- **Casting / Chromecast** — not currently exposed in the phone UI.
 
 ---
 
