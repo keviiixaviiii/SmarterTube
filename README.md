@@ -55,6 +55,16 @@ Pick the APK for your device:
 
 SmarterTube installs as `app.smarttube.mobile` and is **co-installable** with the upstream SmartTube TV build (`app.smarttube`). They do not conflict.
 
+### Auto-updates via Obtainium
+
+SmarterTube is not on any app store. [Obtainium](https://github.com/ImranR98/Obtainium) installs and auto-updates apps straight from their GitHub Releases — no store and no central repository involved:
+
+1. Install Obtainium (itself sideloaded from its own GitHub Releases).
+2. **Add App** → paste `https://github.com/CodeSculptor/SmarterTube`.
+3. Obtainium tracks each new release automatically; choose the `arm64-v8a` asset (or `universal`) when prompted.
+
+This is the easiest way to stay current.
+
 Official builds are published only on this GitHub Releases page unless another source is explicitly linked here.
 
 ### Verifying your download
@@ -100,13 +110,13 @@ This is alpha software. Install it with that in mind:
 
 - **Alpha status** — expect rough edges, missing screens, and occasional breakage. Not all upstream features are plumbed into the phone UI yet.
 - **Upstream / YouTube breakage** — YouTube changes its private APIs without warning, which can break playback at any time. Fixes depend on upstream SmartTube's cadence, then a re-merge here.
-- **Sideload only** — no Google Play listing. Install the APK yourself from Releases; there is no auto-update.
+- **Sideload only** — not on any app store. Install the APK yourself from Releases, or use [Obtainium](#auto-updates-via-obtainium) to install and auto-update directly from GitHub.
 - **No guarantees** — this is an independent fork with no affiliation to Google/YouTube or to upstream SmartTube's author.
 
 Specific gaps:
 
 - **TV / leanback interface** — install [upstream SmartTube](https://github.com/yuliskov/SmartTube) for Android TV boxes and sticks.
-- **F-Droid listing** — not yet; sideload from Releases.
+- **F-Droid / IzzyOnDroid listing** — not available; use GitHub Releases or [Obtainium](#auto-updates-via-obtainium).
 - **Casting / Chromecast** — not currently exposed in the phone UI.
 
 ---
