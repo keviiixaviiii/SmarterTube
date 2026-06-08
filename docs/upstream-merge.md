@@ -8,7 +8,24 @@ This fork tracks [yuliskov/SmartTube](https://github.com/yuliskov/SmartTube). Th
 |---|---|---|
 | Detect & propose | Daily check for new upstream commits; opens a PR (clean merge) or issue (conflicts) | [`.github/workflows/upstream-sync.yml`](../.github/workflows/upstream-sync.yml) |
 | Validate | Confirms the 3 integration points are intact and `stmobile` still builds | [`.github/workflows/stmobile-validate.yml`](../.github/workflows/stmobile-validate.yml) |
-| Decide & ship | Human reviews diff, merges, cuts a release | This document |
+| Merge | **Clean PRs auto-merge once `stmobile-validate` is green.** Conflicts, or a failed build, hold the merge and open an issue for a human | `upstream-sync.yml` + branch protection |
+| Ship | Human cuts a release after a batch of merges (version bump, signed APKs) | This document |
+
+> **Auto-merge:** clean upstream changes that pass the phone-app build check now merge themselves —
+> no action needed. A merge that touches an integration point or breaks the build fails the check,
+> is **not** merged, and surfaces as an issue you're emailed about. So "hands-off until something
+> actually needs me" is the default.
+
+## Staying informed when you're not actively developing
+
+You don't have to watch this repo to stay in sync:
+
+- **Conflicts / failed builds** open an issue here → GitHub emails you (you own the repo).
+- **Every upstream release:** click **Watch → Custom → Releases** on
+  [yuliskov/SmartTube](https://github.com/yuliskov/SmartTube) to get an email whenever upstream
+  ships a release — your cue to start a session if you want to cut a matching fork release.
+
+Clean day-to-day upstream commits just auto-merge in the background; no notification needed.
 
 ## The 3 integration points
 
