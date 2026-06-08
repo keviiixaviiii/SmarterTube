@@ -54,6 +54,22 @@
                 android:tint="@color/mobile_text_primary"
                 android:contentDescription="@string/mobile_search_hint"
                 android:background="?android:attr/selectableItemBackground" />
+
+            <!--
+                Account switcher. Mirrors SmartTube TV's title-bar account orb: shows the
+                signed-in account's circular avatar; tap cycles accounts, long-press opens
+                account management. See MobileBrowseFragment.updateAccountIcon().
+            -->
+            <ImageView
+                android:id="@+id/btn_account"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:padding="12dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/browse_title_account"
+                android:tint="@color/mobile_text_primary"
+                android:contentDescription="@string/mobile_account_hint"
+                android:background="?android:attr/selectableItemBackground" />
         </LinearLayout>
 
         <FrameLayout

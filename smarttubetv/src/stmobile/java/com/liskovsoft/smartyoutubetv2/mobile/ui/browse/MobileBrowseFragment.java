@@ -3,6 +3,7 @@ package com.liskovsoft.smartyoutubetv2.mobile.ui.browse;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.ColorStateList;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -11,11 +12,13 @@ import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
@@ -24,6 +27,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import com.bumptech.glide.Glide;
+import com.liskovsoft.mediaserviceinterfaces.oauth.Account;
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.BrowseSection;
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.SettingsGroup;
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.SettingsItem;
@@ -32,7 +37,10 @@ import com.liskovsoft.smartyoutubetv2.common.app.models.data.VideoGroup;
 import com.liskovsoft.smartyoutubetv2.common.app.models.errors.ErrorFragmentData;
 import com.liskovsoft.smartyoutubetv2.common.app.presenters.BrowsePresenter;
 import com.liskovsoft.smartyoutubetv2.common.app.presenters.SearchPresenter;
+import com.liskovsoft.smartyoutubetv2.common.app.presenters.dialogs.AccountSelectionPresenter;
+import com.liskovsoft.smartyoutubetv2.common.app.presenters.settings.AccountSettingsPresenter;
 import com.liskovsoft.smartyoutubetv2.common.app.views.BrowseView;
+import com.liskovsoft.smartyoutubetv2.common.misc.MediaServiceManager;
 import com.liskovsoft.smartyoutubetv2.mobile.ui.about.MobileAboutActivity;
 import com.liskovsoft.smartyoutubetv2.mobile.ui.prefs.MobileThemePrefs;
 import com.liskovsoft.smartyoutubetv2.tv.R;
@@ -49,7 +57,7 @@ import java.util.List;
  * sections (Subscriptions, History, ...) render as a 2-column grid. The drawer menu
  * opens with an edge-swipe or the toolbar button.
  */
-public class MobileBrowseFragment extends Fragment implements BrowseView {
+public class MobileBrowseFragment extends Fragment implements BrowseView, MediaServiceManager.AccountChangeListener {
     private BrowsePresenter mPresenter;
     private DrawerLayout mDrawer;
     private SwipeRefreshLayout mSwipeRefresh;
@@ -59,6 +67,7 @@ public class MobileBrowseFragment extends Fragment implements BrowseView {
     private View mEmptyContainer;
     private Button mEmptyButton;
     private TextView mToolbarTitle;
+    private ImageView mAccountView;
     private SectionAdapter mSectionAdapter;
     private VideoCardAdapter mGridAdapter;
     private ShelfAdapter mShelfAdapter;
@@ -100,6 +109,18 @@ public class MobileBrowseFragment extends Fragment implements BrowseView {
 
         view.findViewById(R.id.btn_search).setOnClickListener(v ->
                 SearchPresenter.instance(getContext()).startSearch(null));
+
+        // Account switcher — mirrors SmartTube TV's title-bar orb (NavigateTitleView):
+        // tap cycles to the next account, long-press opens account management.
+        mAccountView = view.findViewById(R.id.btn_account);
+        mAccountView.setOnClickListener(v ->
+                AccountSelectionPresenter.instance(getContext()).nextAccountOrDialog());
+        mAccountView.setOnLongClickListener(v -> {
+            AccountSettingsPresenter.instance(getContext()).show();
+            return true;
+        });
+        MediaServiceManager.instance().addAccountListener(this);
+        updateAccountIcon();
 
         view.findViewById(R.id.drawer_about).setOnClickListener(v -> {
             if (mDrawer != null) {
@@ -165,8 +186,43 @@ public class MobileBrowseFragment extends Fragment implements BrowseView {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        MediaServiceManager.instance().removeAccountListener(this);
         if (mPresenter != null) {
             mPresenter.onViewDestroyed();
+        }
+    }
+
+    @Override
+    public void onAccountChanged(Account account) {
+        updateAccountIcon();
+    }
+
+    /**
+     * Load the signed-in account's circular avatar into the toolbar button — the touch-UI
+     * counterpart of {@code NavigateTitleView.updateAccountIcon()}. Falls back to the default
+     * account placeholder when no account is selected (or it has no avatar).
+     */
+    private void updateAccountIcon() {
+        if (mAccountView == null) {
+            return;
+        }
+
+        Account current = MediaServiceManager.instance().getSelectedAccount();
+
+        if (current != null && current.getAvatarImageUrl() != null) {
+            // A real photo: drop the placeholder's monochrome tint so it shows in full colour.
+            mAccountView.setImageTintList(null);
+            Glide.with(this)
+                    .load(current.getAvatarImageUrl())
+                    .placeholder(R.drawable.browse_title_account)
+                    .circleCrop()
+                    .into(mAccountView);
+        } else {
+            Glide.with(this).clear(mAccountView);
+            // Re-apply the toolbar tint so the placeholder matches the other toolbar icons.
+            mAccountView.setImageTintList(ColorStateList.valueOf(
+                    ContextCompat.getColor(mAccountView.getContext(), R.color.mobile_text_primary)));
+            mAccountView.setImageResource(R.drawable.browse_title_account);
         }
     }
 
@@ -409,7 +465,8 @@ public class MobileBrowseFragment extends Fragment implements BrowseView {
 
     @Override
     public void updateBadge() {
-        // Account-avatar badge is a TV-toolbar feature; no equivalent in the phone toolbar.
+        // Keep the toolbar account avatar in sync (the phone counterpart of the TV account orb).
+        updateAccountIcon();
     }
 
     // ----- helpers -----

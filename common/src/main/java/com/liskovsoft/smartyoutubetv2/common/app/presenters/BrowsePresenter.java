@@ -1143,6 +1143,10 @@ public class BrowsePresenter extends BasePresenter<BrowseView> implements Sectio
         initSectionMappings();
         updateChannelSorting();
         updatePlaylistsStyle();
+        // Land on the boot/Home section after switching accounts rather than restoring the
+        // section we switched from (e.g. Settings). refreshSections() falls back to the boot
+        // section when there's no current section to restore.
+        mCurrentSection = null;
         updateSections();
     }
 
