@@ -286,4 +286,13 @@ dependencies {
     // okhttp to okhttpVersion), so this only exposes the type for compilation — no new
     // artifact or version drift.
     stmobileImplementation 'com.squareup.okhttp3:okhttp:' + okhttpVersion
+    // WorkManager for the phone upload-notifications background poll. `workVersion` is already
+    // defined in SharedModules/constants.gradle (common pulls the same artifact), so this only
+    // adds it to the stmobile flavor's classpath - smarttubetv depends on :common via a
+    // non-transitive `implementation`, so it isn't visible here otherwise. No version drift.
+    stmobileImplementation 'androidx.work:work-runtime:' + workVersion
+    // Guava provides com.google.common.util.concurrent.ListenableFuture, exposed in
+    // ListenableWorker's API - required on the compile classpath to subclass Worker (same
+    // "Work library deps" pairing that common and leanbackassistant use).
+    stmobileImplementation 'com.google.guava:guava:' + guavaVersion
 }

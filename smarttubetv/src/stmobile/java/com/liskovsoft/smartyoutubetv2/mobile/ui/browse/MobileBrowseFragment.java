@@ -41,7 +41,9 @@ import com.liskovsoft.smartyoutubetv2.common.app.presenters.dialogs.AccountSelec
 import com.liskovsoft.smartyoutubetv2.common.app.presenters.settings.AccountSettingsPresenter;
 import com.liskovsoft.smartyoutubetv2.common.app.views.BrowseView;
 import com.liskovsoft.smartyoutubetv2.common.misc.MediaServiceManager;
+import com.liskovsoft.smartyoutubetv2.mobile.notifications.NotificationPollWorker;
 import com.liskovsoft.smartyoutubetv2.mobile.ui.about.MobileAboutActivity;
+import com.liskovsoft.smartyoutubetv2.mobile.ui.prefs.MobileNotificationPrefs;
 import com.liskovsoft.smartyoutubetv2.mobile.ui.prefs.MobileThemePrefs;
 import com.liskovsoft.smartyoutubetv2.tv.R;
 
@@ -344,6 +346,10 @@ public class MobileBrowseFragment extends Fragment implements BrowseView, MediaS
                     context.getString(R.string.mobile_theme_title),
                     this::showThemePicker,
                     R.drawable.settings_theme));
+            items.add(new SettingsItem(
+                    context.getString(R.string.mobile_notifications_title),
+                    this::showNotificationsToggle,
+                    R.drawable.settings_notifications));
         }
         if (upstreamItems != null) {
             // Drop upstream's "About" row: it's the TV-oriented About panel (dead
@@ -389,6 +395,39 @@ public class MobileBrowseFragment extends Fragment implements BrowseView, MediaS
                     // new uiMode override.
                     if (getActivity() != null) {
                         getActivity().recreate();
+                    }
+                })
+                .show();
+    }
+
+    /**
+     * Phone-only "Upload notifications" on/off toggle (Part 2 — push). Drives
+     * {@link MobileNotificationPrefs} and (re)schedules {@link NotificationPollWorker}. On enable,
+     * asks for the Android 13+ POST_NOTIFICATIONS permission via the host activity.
+     */
+    private void showNotificationsToggle() {
+        Context context = getContext();
+        if (context == null) {
+            return;
+        }
+        String[] labels = {
+                context.getString(R.string.mobile_notifications_option_off),
+                context.getString(R.string.mobile_notifications_option_on),
+        };
+        boolean enabled = MobileNotificationPrefs.isEnabled(context);
+        int checked = enabled ? 1 : 0;
+        new AlertDialog.Builder(context)
+                .setTitle(R.string.mobile_notifications_title)
+                .setSingleChoiceItems(labels, checked, (dialog, which) -> {
+                    boolean turnOn = which == 1;
+                    dialog.dismiss();
+                    if (turnOn == enabled) {
+                        return;
+                    }
+                    MobileNotificationPrefs.setEnabled(context, turnOn);
+                    NotificationPollWorker.schedule(context);
+                    if (turnOn && getActivity() instanceof MobileBrowseActivity) {
+                        ((MobileBrowseActivity) getActivity()).requestPostNotificationsPermission();
                     }
                 })
                 .show();
