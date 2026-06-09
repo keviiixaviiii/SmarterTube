@@ -53,4 +53,5 @@ jobs:
 
       - name: Explain failure
         if: failure()
-        run: echo "::error::SYNC_PAT could NOT create a PR. Check the token value is correct and has 'Pull requests: Read and write' on CodeSculptor/SmarterTube."
+        run: |
+          echo "::error::SYNC_PAT could NOT create a PR. Check the token value is correct and has Pull-requests write on CodeSculptor/SmarterTube."
