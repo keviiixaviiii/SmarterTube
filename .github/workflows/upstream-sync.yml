@@ -13,7 +13,7 @@ name: Upstream sync
 
 on:
   schedule:
-    - cron: '17 6 * * *'  # daily at 06:17 UTC
+    - cron: '17 */6 * * *'  # every 6h at :17 (00:17 / 06:17 / 12:17 / 18:17 UTC)
   workflow_dispatch:
 
 permissions:
@@ -92,7 +92,9 @@ jobs:
         id: merge
         run: |
           DATE=$(date -u +%Y-%m-%d)
-          BRANCH="upstream-sync/$DATE"
+          # Time suffix so multiple same-day runs (now every 6h) don't collide on the
+          # no-force push after an earlier sync branch has auto-merged and closed.
+          BRANCH="upstream-sync/$DATE-$(date -u +%H%M)"
           echo "branch=$BRANCH" >> $GITHUB_OUTPUT
           git checkout -B "$BRANCH" master
           if git merge --no-ff --no-commit upstream/master; then
