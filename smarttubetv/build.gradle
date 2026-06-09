@@ -191,10 +191,10 @@ android {
             // for in-place upgrade). The old "upstream * 10" rule was dropped at
             // 31.77 (upstream's code stopped tracking its versionName).
             // History: alpha1-4 = 23701-23704, beta1 = 23705, 1.0 = 23706,
-            // 1.1 = 23707 → next is 23708.
+            // 1.1 = 23707, 1.2 = 23708 → next is 23709.
             // versionName = "<upstream>-mobile-<major>.<minor>".
-            versionCode 23707
-            versionName "31.90-mobile-1.1"
+            versionCode 23708
+            versionName "31.90-mobile-1.2"
         }
     }
 }
