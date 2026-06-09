@@ -13,6 +13,7 @@ import com.liskovsoft.smartyoutubetv2.common.app.views.ViewManager;
 import com.liskovsoft.smartyoutubetv2.common.app.views.WebBrowserView;
 import com.liskovsoft.mediaserviceinterfaces.data.MediaGroup;
 import com.liskovsoft.smartyoutubetv2.common.app.presenters.service.SidebarService;
+import com.liskovsoft.smartyoutubetv2.common.prefs.AppPrefs;
 import com.liskovsoft.smartyoutubetv2.mobile.ui.browse.MobileBrowseActivity;
 import com.liskovsoft.smartyoutubetv2.mobile.ui.channel.MobileChannelActivity;
 import com.liskovsoft.smartyoutubetv2.mobile.ui.channeluploads.MobileChannelUploadsActivity;
@@ -35,6 +36,19 @@ import com.liskovsoft.smartyoutubetv2.tv.ui.webbrowser.WebBrowserActivity;
  * phases will replace them in turn).
  */
 public class MobileApplication extends MainApplication {
+    /**
+     * Re-applies the notifications-section default whenever the active account changes.
+     *
+     * The sidebar is per-account state ({@code AppPrefs.getSidebarData} is profile-keyed), and
+     * SidebarService reloads it on every account switch — so a one-shot enable would only ever
+     * reach the account active at boot. This listener fires after SidebarService has reloaded the
+     * new account's sidebar (plain listeners run after it), re-adding the section for that account.
+     * {@code enableSection} is idempotent, so this never duplicates. Held as a field because
+     * AppPrefs keeps listeners in a WeakHashSet and would otherwise let it be collected.
+     */
+    private final AppPrefs.ProfileChangeListener mEnableNotificationsSection =
+            () -> SidebarService.instance(this).enableSection(MediaGroup.TYPE_NOTIFICATIONS, true);
+
     @Override
     public void onCreate() {
         // Apply the persisted Theme choice (System / Light / Dark) before any activity
@@ -43,14 +57,13 @@ public class MobileApplication extends MainApplication {
         MobileThemePrefs.apply(this);
         super.onCreate();
 
-        // One-time migration: surface the YouTube notifications inbox in the phone nav drawer.
-        // The section is fully wired upstream but hidden by default (SidebarService.initPinnedItems).
-        // Enable it once so it appears for fresh and existing installs; the user can hide/reorder it
-        // afterwards and it won't be forced back on. stmobile-only — keeps shared code upstream-mergeable.
-        if (!MobileSectionsPrefs.isNotificationsMigrated(this)) {
-            SidebarService.instance(this).enableSection(MediaGroup.TYPE_NOTIFICATIONS, true);
-            MobileSectionsPrefs.setNotificationsMigrated(this, true);
-        }
+        // Always surface the YouTube notifications inbox as a phone nav-drawer tab, for every
+        // account. The section is fully wired upstream but hidden by default
+        // (SidebarService.initPinnedItems). Enable it for the account active now and re-enable on
+        // every account switch via the listener below. stmobile-only — shared common code is
+        // untouched, so the fork stays upstream-mergeable.
+        SidebarService.instance(this).enableSection(MediaGroup.TYPE_NOTIFICATIONS, true);
+        AppPrefs.instance(this).addListener(mEnableNotificationsSection);
     }
 
     @Override
