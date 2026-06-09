@@ -11,6 +11,8 @@ import com.liskovsoft.smartyoutubetv2.common.app.views.SignInView;
 import com.liskovsoft.smartyoutubetv2.common.app.views.SplashView;
 import com.liskovsoft.smartyoutubetv2.common.app.views.ViewManager;
 import com.liskovsoft.smartyoutubetv2.common.app.views.WebBrowserView;
+import com.liskovsoft.mediaserviceinterfaces.data.MediaGroup;
+import com.liskovsoft.smartyoutubetv2.common.app.presenters.service.SidebarService;
 import com.liskovsoft.smartyoutubetv2.mobile.ui.browse.MobileBrowseActivity;
 import com.liskovsoft.smartyoutubetv2.mobile.ui.channel.MobileChannelActivity;
 import com.liskovsoft.smartyoutubetv2.mobile.ui.channeluploads.MobileChannelUploadsActivity;
@@ -40,6 +42,15 @@ public class MobileApplication extends MainApplication {
         // - avoids a recreate-flicker on cold start.
         MobileThemePrefs.apply(this);
         super.onCreate();
+
+        // One-time migration: surface the YouTube notifications inbox in the phone nav drawer.
+        // The section is fully wired upstream but hidden by default (SidebarService.initPinnedItems).
+        // Enable it once so it appears for fresh and existing installs; the user can hide/reorder it
+        // afterwards and it won't be forced back on. stmobile-only — keeps shared code upstream-mergeable.
+        if (!MobileSectionsPrefs.isNotificationsMigrated(this)) {
+            SidebarService.instance(this).enableSection(MediaGroup.TYPE_NOTIFICATIONS, true);
+            MobileSectionsPrefs.setNotificationsMigrated(this, true);
+        }
     }
 
     @Override
