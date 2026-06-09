@@ -1,0 +1,56 @@
+name: PAT self-test (temporary)
+
+# Throwaway: verifies SYNC_PAT can create a PR from inside Actions — the exact
+# capability the scoped GITHUB_TOKEN lacks on this fork. Self-cleaning. Delete this
+# file once the test has passed.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Push a scratch branch
+        id: b
+        run: |
+          BR="pat-test/${{ github.run_id }}"
+          echo "br=$BR" >> $GITHUB_OUTPUT
+          git checkout -B "$BR" origin/master
+          git commit --allow-empty -m "PAT self-test (empty commit)"
+          git push origin "$BR"
+
+      - name: Create + close a PR using SYNC_PAT
+        env:
+          GH_TOKEN: ${{ secrets.SYNC_PAT }}
+        run: |
+          set -euo pipefail
+          URL=$(gh pr create \
+            --base master \
+            --head "${{ steps.b.outputs.br }}" \
+            --title "PAT self-test — delete me" \
+            --body "Automated capability check for SYNC_PAT. Auto-closed by the workflow.")
+          echo "PASS: SYNC_PAT created $URL"
+          gh pr close "$URL"
+          echo "PASS: PR closed"
+
+      - name: Clean up scratch branch
+        if: always()
+        run: git push origin --delete "${{ steps.b.outputs.br }}" || echo "branch already gone"
+
+      - name: Explain failure
+        if: failure()
+        run: echo "::error::SYNC_PAT could NOT create a PR. Check the token value is correct and has 'Pull requests: Read and write' on CodeSculptor/SmarterTube."
