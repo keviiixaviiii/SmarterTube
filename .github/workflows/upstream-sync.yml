@@ -115,7 +115,14 @@ jobs:
       - name: Open PR (clean merge) and enable auto-merge
         if: steps.check.outputs.needs_sync == 'true' && steps.merge.outputs.status == 'clean'
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # On a fork, the scoped GITHUB_TOKEN is refused `createPullRequest`
+          # ("Resource not accessible by integration") regardless of the
+          # default_workflow_permissions=write / can_approve_pull_request_reviews
+          # toggles — verified live 2026-06-09. A PAT is required for the bot to
+          # open the PR itself. Prefer SYNC_PAT if configured; otherwise fall back
+          # to GITHUB_TOKEN, which fails `gh pr create` and trips the never-silent
+          # issue fallback below so a human can open the (already-pushed) branch.
+          GH_TOKEN: ${{ secrets.SYNC_PAT || secrets.GITHUB_TOKEN }}
         run: |
           {
             echo "Automatic merge of upstream/master into master — clean, no conflicts."
