@@ -193,8 +193,8 @@ android {
             // History: alpha1-4 = 23701-23704, beta1 = 23705, 1.0 = 23706,
             // 1.1 = 23707, 1.2 = 23708 → next is 23709.
             // versionName = "<upstream>-mobile-<major>.<minor>".
-            versionCode 23708
-            versionName "31.90-mobile-1.2"
+            versionCode 23709
+            versionName "31.93-mobile-1.3"
         }
     }
 }
