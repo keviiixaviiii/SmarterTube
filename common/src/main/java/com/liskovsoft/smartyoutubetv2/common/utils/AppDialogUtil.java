@@ -768,7 +768,14 @@ public class AppDialogUtil {
                     String.valueOf(speed),
                     optionItem -> {
                         if (playbackController != null) {
-                            //playerData.setSpeed(playbackController.getVideo().channelId, speed);
+                            // Persist the choice first so it survives the player engine being
+                            // torn down while a separate dialog activity is foreground (phone):
+                            // there setSpeed() would no-op against a null engine and the choice
+                            // would be lost. restoreSpeedAndPositionIfNeeded() re-applies (and
+                            // re-tints the speed icon) when the player returns to the foreground.
+                            if (playbackController.getVideo() != null) {
+                                playerData.setSpeed(playbackController.getVideo().channelId, speed);
+                            }
                             playbackController.setSpeed(speed);
                         } else {
                             playerData.setSpeed(speed);
