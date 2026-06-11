@@ -51,6 +51,19 @@ public class MobileAppDialogActivity extends MobileActivity {
     }
 
     @Override
+    public void onBackPressed() {
+        // A nested comments replies thread is one back-level inside the fragment: restore the
+        // top-level comments instead of closing the dialog.
+        MobileAppDialogFragment fragment = (MobileAppDialogFragment)
+                getSupportFragmentManager().findFragmentById(R.id.mobile_app_dialog_root);
+        if (fragment != null && fragment.canGoBack()) {
+            fragment.goBack();
+            return;
+        }
+        super.onBackPressed();
+    }
+
+    @Override
     public void finish() {
         // Mirror TV AppDialogActivity: fire the presenter's onFinish callbacks before the
         // real finish, regardless of whether finish() came from back or from a programmatic
