@@ -13,4 +13,11 @@
         hides subtitles. Keep a small margin so captions span the screen width.
     -->
     <dimen name="subtitle_horizontal_padding">16dp</dimen>
+
+    <!--
+        Phone override of the Leanback dimen that floats the player controls block above the
+        bottom edge (TV overscan safety). On a phone the seek bar should hug the very bottom
+        of the video, YouTube-style.
+    -->
+    <dimen name="lb_playback_controls_padding_bottom">4dp</dimen>
 </resources>

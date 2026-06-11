@@ -3,27 +3,41 @@ package com.liskovsoft.smartyoutubetv2.mobile.ui.playback;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
+import android.view.MotionEvent;
+
+import androidx.fragment.app.Fragment;
 
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.Video;
 import com.liskovsoft.smartyoutubetv2.common.app.presenters.PlaybackPresenter;
+import com.liskovsoft.smartyoutubetv2.tv.R;
 import com.liskovsoft.smartyoutubetv2.tv.ui.playback.PlaybackActivity;
 
 /**
  * Phone playback host for the stmobile flavor.
  *
  * Reuses the shared {@link PlaybackActivity} (the whole player — engine, controls, PIP —
- * is kept intact) and only adds screen-orientation handling: the TV build is always
- * landscape, but on a phone a 9:16 Short must play portrait or it shows as a thin strip
- * boxed in by black bars. Orientation is chosen from the current video's type.
+ * is kept intact) and adds the phone behaviors: screen orientation by video type (Shorts lock
+ * portrait, regular videos rotate freely for the upright strip layout) and touch-friendly
+ * overlay handling (a tap on the faded player only reveals the controls — see
+ * {@link MobilePlaybackFragment#interceptPlayerTouch}).
  *
  * Known limitation: orientation is decided when the activity is created / re-entered, so a
  * single player session that crosses a Short/regular-video boundary (e.g. autoplay) keeps
  * the first video's orientation until the activity is recreated.
  */
 public class MobilePlaybackActivity extends PlaybackActivity {
+    private MobilePlaybackFragment mMobileFragment;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        Fragment fragment =
+                getSupportFragmentManager().findFragmentByTag(getString(R.string.playback_tag));
+        if (fragment instanceof MobilePlaybackFragment) {
+            mMobileFragment = (MobilePlaybackFragment) fragment;
+        }
+
         applyOrientationForCurrentVideo();
     }
 
@@ -33,6 +47,18 @@ public class MobilePlaybackActivity extends PlaybackActivity {
         applyOrientationForCurrentVideo();
     }
 
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent event) {
+        // While the overlay is faded out its buttons are still hit-testable (Leanback hides by
+        // alpha, not visibility) — consume the tap so it only reveals the controls instead of
+        // pressing an invisible button.
+        if (mMobileFragment != null && mMobileFragment.interceptPlayerTouch(event)) {
+            return true;
+        }
+
+        return super.dispatchTouchEvent(event);
+    }
+
     private void applyOrientationForCurrentVideo() {
         Video video = PlaybackPresenter.instance(this).getVideo();
 
@@ -40,8 +66,11 @@ public class MobilePlaybackActivity extends PlaybackActivity {
             // Shorts are 9:16 — lock to portrait so they fill the screen.
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         } else {
-            // Regular videos are landscape; allow either landscape orientation.
-            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
+            // Regular videos rotate freely: landscape = full-screen, upright = 16:9 strip with
+            // the up-next panel below (MobilePlaybackFragment.applyMobileLayout). The manifest
+            // lists "orientation" in configChanges, so rotation never recreates the activity
+            // (no rebuffer) — the fragment just re-applies constraints.
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_FULL_USER);
         }
     }
 }

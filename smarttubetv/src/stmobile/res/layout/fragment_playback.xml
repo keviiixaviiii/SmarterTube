@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    stmobile override of the player activity content (main: a bare full-screen PlaybackFragment).
+
+    Adds an upright/portrait mode: the player fragment is constrained to a 16:9 strip at the top
+    and a below-video panel (title + channel + up-next list) fills the rest. The constraints are
+    switched at runtime by MobilePlaybackFragment.applyMobileLayout() — this XML's defaults are
+    the full-screen (landscape / Shorts / PiP) state so the player looks unchanged until the
+    portrait state is explicitly applied. The fragment class is the mobile subclass which feeds
+    the panel; the tag must stay @string/playback_tag (PlaybackActivity looks the fragment up by
+    tag and checks instanceof PlaybackFragment).
+-->
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/mobile_playback_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/black">
+
+    <fragment
+        android:id="@+id/playback_controls_fragment"
+        android:name="com.liskovsoft.smartyoutubetv2.mobile.ui.playback.MobilePlaybackFragment"
+        android:tag="@string/playback_tag"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+    <LinearLayout
+        android:id="@+id/mobile_below_video_panel"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/playback_controls_fragment"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <!-- Title row; tapping it toggles the description below (chevron flips). -->
+        <LinearLayout
+            android:id="@+id/mobile_video_title_row"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingStart="16dp"
+            android:paddingEnd="12dp"
+            android:paddingTop="12dp"
+            android:background="?android:attr/selectableItemBackground">
+
+            <TextView
+                android:id="@+id/mobile_video_title"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textColor="@android:color/white"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:maxLines="2"
+                android:ellipsize="end" />
+
+            <TextView
+                android:id="@+id/mobile_video_expand"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingStart="12dp"
+                android:paddingEnd="4dp"
+                android:textColor="#FFCCCCCC"
+                android:textSize="26sp"
+                android:text="▾" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/mobile_video_description"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingTop="8dp"
+            android:textColor="#FFCCCCCC"
+            android:textSize="13sp"
+            android:maxLines="14"
+            android:ellipsize="end"
+            android:visibility="gone" />
+
+        <!-- Meta block: channel name with subscribers below (left); views with likes below (right). -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="12dp">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/mobile_video_channel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@android:color/white"
+                    android:textSize="15sp"
+                    android:maxLines="1"
+                    android:ellipsize="end" />
+
+                <TextView
+                    android:id="@+id/mobile_video_subs"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="2dp"
+                    android:textColor="#FFAAAAAA"
+                    android:textSize="13sp"
+                    android:maxLines="1"
+                    android:ellipsize="end" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingStart="12dp"
+                android:gravity="end">
+
+                <TextView
+                    android:id="@+id/mobile_video_views"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@android:color/white"
+                    android:textSize="15sp"
+                    android:maxLines="1" />
+
+                <TextView
+                    android:id="@+id/mobile_video_stats"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="2dp"
+                    android:textColor="#FFAAAAAA"
+                    android:textSize="13sp"
+                    android:maxLines="1"
+                    android:ellipsize="end" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#22FFFFFF" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/mobile_up_next_list"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:paddingTop="6dp" />
+    </LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>
