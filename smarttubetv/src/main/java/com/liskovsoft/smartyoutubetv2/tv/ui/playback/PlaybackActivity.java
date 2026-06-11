@@ -4,6 +4,7 @@ import android.annotation.TargetApi;
 import android.app.PictureInPictureParams;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Rational;
 import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -141,6 +142,10 @@ public class PlaybackActivity extends LeanbackActivity {
                 try {
                     if (Build.VERSION.SDK_INT >= 26) {
                         PictureInPictureParams.Builder params = new PictureInPictureParams.Builder();
+                        // Some phones reject an empty params object; supply an explicit aspect
+                        // ratio within the platform's legal range (~0.42..2.39) so the PIP window
+                        // can be laid out. 16:9 (1.78) is the common video aspect.
+                        params.setAspectRatio(new Rational(16, 9));
                         enterPictureInPictureMode(params.build());
                     } else {
                         enterPictureInPictureMode();
@@ -260,7 +265,11 @@ public class PlaybackActivity extends LeanbackActivity {
     public void onPictureInPictureModeChanged(boolean isInPictureInPictureMode) {
         super.onPictureInPictureModeChanged(isInPictureInPictureMode);
 
-        mPlaybackFragment.onPIPChanged(isInPictureInPictureMode);
+        // Fragment may already be detached/released when the system delivers this
+        // callback during a PIP transition (notably on phones). Guard against NPE.
+        if (mPlaybackFragment != null) {
+            mPlaybackFragment.onPIPChanged(isInPictureInPictureMode);
+        }
     }
 
     /**
