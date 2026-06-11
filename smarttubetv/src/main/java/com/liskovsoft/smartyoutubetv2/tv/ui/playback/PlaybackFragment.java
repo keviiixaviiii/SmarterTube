@@ -292,6 +292,11 @@ public class PlaybackFragment extends SeekModePlaybackFragment implements Playba
         mPlaybackPresenter.onFinish();
     }
 
+    /** MOD (phone): subclass access to the glue for per-orientation control tweaks. */
+    protected VideoPlayerGlue getPlayerGlue() {
+        return mPlayerGlue;
+    }
+
     public void onPIPChanged(boolean isInPIP) {
         if (!isInPIP) {
             // Fix partially disappeared buttons after exit from PIP???

@@ -248,6 +248,49 @@ public class VideoPlayerGlue extends MaxControlsVideoPlayerGlue<PlayerAdapter> i
         return rowPresenter;
     }
 
+    /**
+     * MOD (phone): trim the control rows to the core actions that fit a small portrait video
+     * strip; restore the user's full set on exit. The TV build never calls this. Action
+     * instances are reused from {@code mActions}, so toggle state (CC on, like, etc.) survives
+     * the swap.
+     */
+    public void setCompactControls(boolean compact) {
+        if (getControlsRow() == null) {
+            return;
+        }
+
+        ArrayObjectAdapter primary = (ArrayObjectAdapter) getControlsRow().getPrimaryActionsAdapter();
+        ArrayObjectAdapter secondary = (ArrayObjectAdapter) getControlsRow().getSecondaryActionsAdapter();
+        if (primary == null) {
+            return;
+        }
+
+        primary.clear();
+        if (secondary != null) {
+            secondary.clear();
+        }
+
+        if (compact) {
+            super.onCreatePrimaryActions(primary); // play/pause
+            primary.add(mSkipPreviousAction);
+            primary.add(mSkipNextAction);
+            if (mPlayerTweaksData.isPlayerButtonEnabled(PlayerTweaksData.PLAYER_BUTTON_CHAT)) {
+                primary.add(mActions.get(R.id.action_chat));
+            }
+            if (mPlayerTweaksData.isPlayerButtonEnabled(PlayerTweaksData.PLAYER_BUTTON_SUBTITLES)) {
+                primary.add(mActions.get(R.id.lb_control_closed_captioning));
+            }
+            if (mPlayerTweaksData.isPlayerButtonEnabled(PlayerTweaksData.PLAYER_BUTTON_HIGH_QUALITY)) {
+                primary.add(mActions.get(R.id.lb_control_high_quality));
+            }
+        } else {
+            onCreatePrimaryActions(primary);
+            if (secondary != null) {
+                onCreateSecondaryActions(secondary);
+            }
+        }
+    }
+
     @Override
     public void onActionClicked(Action action) {
         if (!dispatchAction(action)) {
