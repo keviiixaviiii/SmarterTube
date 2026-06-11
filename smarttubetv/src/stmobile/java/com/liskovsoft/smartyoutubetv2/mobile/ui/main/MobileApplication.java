@@ -1,5 +1,7 @@
 package com.liskovsoft.smartyoutubetv2.mobile.ui.main;
 
+import android.content.SharedPreferences;
+
 import com.liskovsoft.smartyoutubetv2.common.app.views.AddDeviceView;
 import com.liskovsoft.smartyoutubetv2.common.app.views.AppDialogView;
 import com.liskovsoft.smartyoutubetv2.common.app.views.BrowseView;
@@ -14,6 +16,7 @@ import com.liskovsoft.smartyoutubetv2.common.app.views.WebBrowserView;
 import com.liskovsoft.mediaserviceinterfaces.data.MediaGroup;
 import com.liskovsoft.smartyoutubetv2.common.app.presenters.service.SidebarService;
 import com.liskovsoft.smartyoutubetv2.common.prefs.AppPrefs;
+import com.liskovsoft.smartyoutubetv2.common.prefs.PlayerTweaksData;
 import com.liskovsoft.smartyoutubetv2.mobile.ui.browse.MobileBrowseActivity;
 import com.liskovsoft.smartyoutubetv2.mobile.ui.channel.MobileChannelActivity;
 import com.liskovsoft.smartyoutubetv2.mobile.ui.channeluploads.MobileChannelUploadsActivity;
@@ -64,6 +67,24 @@ public class MobileApplication extends MainApplication {
         // untouched, so the fork stays upstream-mergeable.
         SidebarService.instance(this).enableSection(MediaGroup.TYPE_NOTIFICATIONS, true);
         AppPrefs.instance(this).addListener(mEnableNotificationsSection);
+
+        hideScreenDimmingButtonOnce();
+    }
+
+    /**
+     * Hide the Screen Dimming player button on phones. It blacks the screen for audio-only /
+     * battery saving with a TV remote, but on a phone it reads as a broken control (it just turns
+     * the screen black) — and you can simply lock the phone instead. Done once so a user who
+     * deliberately re-enables it in player settings keeps it. stmobile-only; shared common code
+     * (the button is added by the TV {@code VideoPlayerGlue}) is untouched, keeping the fork
+     * upstream-mergeable.
+     */
+    private void hideScreenDimmingButtonOnce() {
+        SharedPreferences prefs = getSharedPreferences("mobile_player_prefs", MODE_PRIVATE);
+        if (!prefs.getBoolean("screen_dimming_hidden", false)) {
+            PlayerTweaksData.instance(this).setPlayerButtonDisabled(PlayerTweaksData.PLAYER_BUTTON_SCREEN_DIMMING);
+            prefs.edit().putBoolean("screen_dimming_hidden", true).apply();
+        }
     }
 
     @Override
