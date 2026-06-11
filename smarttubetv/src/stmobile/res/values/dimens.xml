@@ -6,4 +6,11 @@
 -->
 <resources>
     <dimen name="mobile_drawer_width">280dp</dimen>
+
+    <!--
+        Phone override: the TV default frames captions with 150sp of horizontal padding on
+        each side, which collapses the caption box to near-zero width on a ~360dp phone and
+        hides subtitles. Keep a small margin so captions span the screen width.
+    -->
+    <dimen name="subtitle_horizontal_padding">16dp</dimen>
 </resources>

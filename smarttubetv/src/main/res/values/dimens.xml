@@ -3,6 +3,9 @@
     <!-- Default, same as xhdpi -->
     <!-- 320dpi, Amazon Fire TV Stick -->
 
+    <!-- Horizontal padding that frames captions. Wide on TV; overridden small on phones (stmobile). -->
+    <dimen name="subtitle_horizontal_padding">150sp</dimen>
+
     <dimen name="card_width">200dp</dimen>
     <dimen name="card_height">110dp</dimen>
     <!-- text_badge_image_view.xml, default: 12sp -->
