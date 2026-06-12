@@ -53,6 +53,8 @@ public class MobilePlaybackFragment extends PlaybackFragment {
     private RecyclerView mUpNextList;
     private UpNextRowAdapter mUpNextAdapter;
     private boolean mStripMode;
+    /** Applied layout: 0 = full-screen, 1 = regular 16:9 strip, 2 = Shorts 9:16 strip. */
+    private int mLayoutState;
     private String mLastVideoId;
     private VideoPlayerGlue mLastGlue;
     private boolean mLastCompact;
@@ -260,15 +262,25 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         boolean isShorts = video != null && video.isShorts;
         boolean inPip = isInPipMode();
 
-        boolean strip = portrait && !isShorts && !inPip && video != null;
+        // Strip mode now also covers Shorts: the player becomes a top-aligned aspect-ratio strip
+        // instead of a vertically-centered full-screen surface. Regular videos get a 16:9 strip with
+        // the up-next panel below; a Short gets a 9:16 strip with empty (black) space below it —
+        // reserved for the future Shorts action bar — and no up-next panel.
+        boolean strip = portrait && !inPip && video != null;
+        boolean showPanel = strip && !isShorts;
+        String ratio = isShorts ? "H,9:16" : "H,16:9";
 
         syncCompactControls(strip);
 
         applyOverlayDecorVisibility(strip);
 
-        if (strip == mStripMode) {
+        // Keyed on the 3-value state (not just the boolean) so a regular<->Shorts switch — both of
+        // which are "strip" — still re-applies the new dimension ratio.
+        int layoutState = !strip ? 0 : (isShorts ? 2 : 1);
+        if (layoutState == mLayoutState) {
             return;
         }
+        mLayoutState = layoutState;
         mStripMode = strip;
 
         // Leanback suggestion rows: removed while in the strip (they draw inside the small video
@@ -285,8 +297,8 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         set.clone(mRoot);
         if (strip) {
             set.clear(R.id.playback_controls_fragment, ConstraintSet.BOTTOM);
-            set.setDimensionRatio(R.id.playback_controls_fragment, "H,16:9");
-            set.setVisibility(R.id.mobile_below_video_panel, View.VISIBLE);
+            set.setDimensionRatio(R.id.playback_controls_fragment, ratio);
+            set.setVisibility(R.id.mobile_below_video_panel, showPanel ? View.VISIBLE : View.GONE);
         } else {
             set.connect(R.id.playback_controls_fragment, ConstraintSet.BOTTOM,
                     ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM);
