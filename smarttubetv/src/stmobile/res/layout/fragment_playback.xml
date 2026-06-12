@@ -81,10 +81,11 @@
             android:paddingStart="16dp"
             android:paddingEnd="16dp"
             android:paddingTop="8dp"
-            android:textColor="#FFCCCCCC"
-            android:textSize="13sp"
-            android:maxLines="14"
-            android:ellipsize="end"
+            android:textColor="#FFDDDDDD"
+            android:textSize="15sp"
+            android:lineSpacingExtra="4dp"
+            android:maxLines="12"
+            android:scrollbars="vertical"
             android:visibility="gone" />
 
         <!-- Meta block: channel name with subscribers below (left); views with likes below (right). -->
@@ -108,7 +109,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textColor="@android:color/white"
-                    android:textSize="15sp"
+                    android:textSize="16sp"
                     android:maxLines="1"
                     android:ellipsize="end" />
 
@@ -118,7 +119,7 @@
                     android:layout_height="wrap_content"
                     android:paddingTop="2dp"
                     android:textColor="#FFAAAAAA"
-                    android:textSize="13sp"
+                    android:textSize="14sp"
                     android:maxLines="1"
                     android:ellipsize="end" />
             </LinearLayout>
@@ -135,7 +136,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textColor="@android:color/white"
-                    android:textSize="15sp"
+                    android:textSize="16sp"
                     android:maxLines="1" />
 
                 <TextView
@@ -144,7 +145,7 @@
                     android:layout_height="wrap_content"
                     android:paddingTop="2dp"
                     android:textColor="#FFAAAAAA"
-                    android:textSize="13sp"
+                    android:textSize="14sp"
                     android:maxLines="1"
                     android:ellipsize="end" />
             </LinearLayout>
