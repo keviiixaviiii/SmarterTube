@@ -42,4 +42,14 @@
     <string name="mobile_theme_option_light">Light</string>
     <string name="mobile_theme_option_dark">Dark</string>
 
+    <!-- Upload notifications (Part 2 - push) -->
+    <string name="mobile_notifications_title">Upload notifications</string>
+    <string name="mobile_notifications_summary">Get notified when channels you follow upload</string>
+    <string name="mobile_notifications_option_on">On</string>
+    <string name="mobile_notifications_option_off">Off</string>
+    <string name="mobile_notifications_channel_name">New uploads</string>
+    <string name="mobile_uploads_summary_title">New uploads</string>
+    <string name="mobile_uploads_summary_text">%1$d new video(s) from your subscriptions</string>
+    <string name="mobile_uploads_new_video">New video</string>
+
 </resources>

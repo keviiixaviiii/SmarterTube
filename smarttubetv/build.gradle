@@ -193,8 +193,8 @@ android {
             // History: alpha1-4 = 23701-23704, beta1 = 23705, 1.0 = 23706,
             // 1.1 = 23707, 1.2 = 23708 → next is 23709.
             // versionName = "<upstream>-mobile-<major>.<minor>".
-            versionCode 23708
-            versionName "31.90-mobile-1.2"
+            versionCode 23709
+            versionName "31.93-mobile-1.3"
         }
     }
 }
@@ -286,4 +286,13 @@ dependencies {
     // okhttp to okhttpVersion), so this only exposes the type for compilation — no new
     // artifact or version drift.
     stmobileImplementation 'com.squareup.okhttp3:okhttp:' + okhttpVersion
+    // WorkManager for the phone upload-notifications background poll. `workVersion` is already
+    // defined in SharedModules/constants.gradle (common pulls the same artifact), so this only
+    // adds it to the stmobile flavor's classpath - smarttubetv depends on :common via a
+    // non-transitive `implementation`, so it isn't visible here otherwise. No version drift.
+    stmobileImplementation 'androidx.work:work-runtime:' + workVersion
+    // Guava provides com.google.common.util.concurrent.ListenableFuture, exposed in
+    // ListenableWorker's API - required on the compile classpath to subclass Worker (same
+    // "Work library deps" pairing that common and leanbackassistant use).
+    stmobileImplementation 'com.google.guava:guava:' + guavaVersion
 }

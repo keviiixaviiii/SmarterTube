@@ -21,7 +21,9 @@ import com.liskovsoft.smartyoutubetv2.mobile.ui.browse.MobileBrowseActivity;
 import com.liskovsoft.smartyoutubetv2.mobile.ui.channel.MobileChannelActivity;
 import com.liskovsoft.smartyoutubetv2.mobile.ui.channeluploads.MobileChannelUploadsActivity;
 import com.liskovsoft.smartyoutubetv2.mobile.ui.dialogs.MobileAppDialogActivity;
+import com.liskovsoft.smartyoutubetv2.mobile.notifications.NotificationPollWorker;
 import com.liskovsoft.smartyoutubetv2.mobile.ui.playback.MobilePlaybackActivity;
+import com.liskovsoft.smartyoutubetv2.mobile.ui.prefs.MobileNotificationPrefs;
 import com.liskovsoft.smartyoutubetv2.mobile.ui.prefs.MobileThemePrefs;
 import com.liskovsoft.smartyoutubetv2.mobile.ui.search.MobileSearchActivity;
 import com.liskovsoft.smartyoutubetv2.mobile.ui.signin.MobileSignInActivity;
@@ -49,8 +51,13 @@ public class MobileApplication extends MainApplication {
      * {@code enableSection} is idempotent, so this never duplicates. Held as a field because
      * AppPrefs keeps listeners in a WeakHashSet and would otherwise let it be collected.
      */
-    private final AppPrefs.ProfileChangeListener mEnableNotificationsSection =
-            () -> SidebarService.instance(this).enableSection(MediaGroup.TYPE_NOTIFICATIONS, true);
+    private final AppPrefs.ProfileChangeListener mEnableNotificationsSection = () -> {
+        SidebarService.instance(this).enableSection(MediaGroup.TYPE_NOTIFICATIONS, true);
+        // Account switched: forget the previous account's seen uploads so the new account
+        // seeds fresh (no cross-account false alerts) and re-evaluate the poll schedule.
+        MobileNotificationPrefs.clearSeenIds(this);
+        NotificationPollWorker.schedule(this);
+    };
 
     @Override
     public void onCreate() {
@@ -67,6 +74,11 @@ public class MobileApplication extends MainApplication {
         // untouched, so the fork stays upstream-mergeable.
         SidebarService.instance(this).enableSection(MediaGroup.TYPE_NOTIFICATIONS, true);
         AppPrefs.instance(this).addListener(mEnableNotificationsSection);
+
+        // Start (or, if the toggle is off, ensure-cancelled) the upload-notifications poll.
+        // schedule() self-gates on MobileNotificationPrefs.isEnabled(); the worker no-ops when
+        // signed out, so this is safe to call unconditionally on every cold start.
+        NotificationPollWorker.schedule(this);
 
         hideScreenDimmingButtonOnce();
     }
