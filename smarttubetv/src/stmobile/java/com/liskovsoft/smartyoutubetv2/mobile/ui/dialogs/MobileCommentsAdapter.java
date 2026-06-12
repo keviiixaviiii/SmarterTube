@@ -22,17 +22,28 @@ import java.util.List;
 
 /**
  * Phone-native comments list. Renders {@link CommentItem}s YouTube-style (avatar, author, date,
- * message, like and reply counts). Drives the shared {@code CommentsReceiver} via callbacks: a row
- * tap opens that comment's replies; the like area toggles a like. Note {@code isEmpty()} means
- * "has no replies" (it's the controller's open-replies guard), so it must NOT be used to filter
- * rows — nested replies and reply-less top-level comments are all isEmpty().
+ * message, like and reply counts). Replies expand inline, indented under their parent comment.
+ * Note {@code isEmpty()} means "has no replies" (it's the controller's open-replies guard), so it
+ * must NOT be used to filter rows — nested replies and reply-less top-level comments are all
+ * isEmpty().
  */
 public class MobileCommentsAdapter extends RecyclerView.Adapter<MobileCommentsAdapter.Holder> {
     public interface OnComment {
         void onComment(CommentItem item);
     }
 
-    private final List<CommentItem> mItems = new ArrayList<>();
+    /** A row: either a top-level comment or an inline-expanded reply under one. */
+    private static final class Entry {
+        final CommentItem item;
+        final boolean isReply;
+
+        Entry(CommentItem item, boolean isReply) {
+            this.item = item;
+            this.isReply = isReply;
+        }
+    }
+
+    private final List<Entry> mItems = new ArrayList<>();
     private final OnComment mReplyClick;
     private final OnComment mLikeClick;
 
@@ -41,7 +52,7 @@ public class MobileCommentsAdapter extends RecyclerView.Adapter<MobileCommentsAd
         mLikeClick = likeClick;
     }
 
-    /** Append a page of comments. Returns the number actually added. */
+    /** Append a page of top-level comments. Returns the number actually added. */
     public int addComments(List<CommentItem> comments) {
         if (comments == null) {
             return 0;
@@ -50,7 +61,7 @@ public class MobileCommentsAdapter extends RecyclerView.Adapter<MobileCommentsAd
         int added = 0;
         for (CommentItem item : comments) {
             if (hasContent(item)) {
-                mItems.add(item);
+                mItems.add(new Entry(item, false));
                 added++;
             }
         }
@@ -60,20 +71,104 @@ public class MobileCommentsAdapter extends RecyclerView.Adapter<MobileCommentsAd
         return added;
     }
 
+    /** Replace the whole list with top-level comments (backup restore). */
     public void setComments(List<CommentItem> comments) {
         mItems.clear();
         if (comments != null) {
             for (CommentItem item : comments) {
                 if (hasContent(item)) {
-                    mItems.add(item);
+                    mItems.add(new Entry(item, false));
                 }
             }
         }
         notifyDataSetChanged();
     }
 
+    /** Top-level comments only (expanded replies are re-fetched on demand after a restore). */
     public List<CommentItem> getComments() {
-        return new ArrayList<>(mItems);
+        List<CommentItem> result = new ArrayList<>();
+        for (Entry entry : mItems) {
+            if (!entry.isReply) {
+                result.add(entry.item);
+            }
+        }
+        return result;
+    }
+
+    /** Insert replies indented under their parent (after any already-expanded ones). */
+    public int insertReplies(CommentItem parent, List<CommentItem> replies) {
+        if (replies == null) {
+            return 0;
+        }
+        int parentIndex = indexOf(parent);
+        if (parentIndex < 0) {
+            return 0;
+        }
+        // Skip past replies already inserted under this parent.
+        int insertAt = parentIndex + 1;
+        while (insertAt < mItems.size() && mItems.get(insertAt).isReply) {
+            insertAt++;
+        }
+        int added = 0;
+        for (CommentItem reply : replies) {
+            if (hasContent(reply)) {
+                mItems.add(insertAt + added, new Entry(reply, true));
+                added++;
+            }
+        }
+        if (added > 0) {
+            notifyItemRangeInserted(insertAt, added);
+        }
+        return added;
+    }
+
+    public boolean hasExpandedReplies(CommentItem parent) {
+        int parentIndex = indexOf(parent);
+        return parentIndex >= 0 && parentIndex + 1 < mItems.size() && mItems.get(parentIndex + 1).isReply;
+    }
+
+    public void collapseReplies(CommentItem parent) {
+        int parentIndex = indexOf(parent);
+        if (parentIndex < 0) {
+            return;
+        }
+        int count = 0;
+        while (parentIndex + 1 + count < mItems.size() && mItems.get(parentIndex + 1 + count).isReply) {
+            count++;
+        }
+        if (count > 0) {
+            for (int i = 0; i < count; i++) {
+                mItems.remove(parentIndex + 1);
+            }
+            notifyItemRangeRemoved(parentIndex + 1, count);
+        }
+    }
+
+    /** Replace an item in place (e.g. after a like toggle) and refresh its row. */
+    public void update(CommentItem item) {
+        if (item == null) {
+            return;
+        }
+        for (int i = 0; i < mItems.size(); i++) {
+            Entry entry = mItems.get(i);
+            if (Helpers.equals(entry.item.getId(), item.getId())) {
+                mItems.set(i, new Entry(item, entry.isReply));
+                notifyItemChanged(i);
+                return;
+            }
+        }
+    }
+
+    private int indexOf(CommentItem item) {
+        if (item == null) {
+            return -1;
+        }
+        for (int i = 0; i < mItems.size(); i++) {
+            if (!mItems.get(i).isReply && Helpers.equals(mItems.get(i).item.getId(), item.getId())) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     /**
@@ -83,20 +178,6 @@ public class MobileCommentsAdapter extends RecyclerView.Adapter<MobileCommentsAd
      */
     private static boolean hasContent(CommentItem item) {
         return item != null && (item.getMessage() != null || item.getAuthorName() != null);
-    }
-
-    /** Replace an item in place (e.g. after a like toggle) and refresh its row. */
-    public void update(CommentItem item) {
-        if (item == null) {
-            return;
-        }
-        for (int i = 0; i < mItems.size(); i++) {
-            if (Helpers.equals(mItems.get(i).getId(), item.getId())) {
-                mItems.set(i, item);
-                notifyItemChanged(i);
-                return;
-            }
-        }
     }
 
     @Override
@@ -114,7 +195,13 @@ public class MobileCommentsAdapter extends RecyclerView.Adapter<MobileCommentsAd
 
     @Override
     public void onBindViewHolder(@NonNull Holder h, int position) {
-        CommentItem item = mItems.get(position);
+        Entry entry = mItems.get(position);
+        CommentItem item = entry.item;
+
+        // Replies indent under their parent (base row padding is 16dp in the item layout).
+        float density = h.itemView.getResources().getDisplayMetrics().density;
+        h.itemView.setPaddingRelative((int) ((entry.isReply ? 60 : 16) * density),
+                h.itemView.getPaddingTop(), (int) (16 * density), h.itemView.getPaddingBottom());
 
         String author = item.getAuthorName() != null ? item.getAuthorName() : "";
         String date = item.getPublishedDate();
@@ -146,12 +233,14 @@ public class MobileCommentsAdapter extends RecyclerView.Adapter<MobileCommentsAd
                 .into(h.avatar);
 
         h.itemView.setOnClickListener(v -> {
-            if (mReplyClick != null && hasReplies) {
+            if (mReplyClick != null && hasReplies && !entry.isReply) {
                 mReplyClick.onComment(item);
             }
         });
 
-        View.OnClickListener likeListener = v -> {
+        // The like toggle goes through the same key as the replies thread — without it the
+        // request can't be built (replies themselves have no key).
+        View.OnClickListener likeListener = item.getNestedCommentsKey() == null ? null : v -> {
             if (mLikeClick != null) {
                 mLikeClick.onComment(item);
             }

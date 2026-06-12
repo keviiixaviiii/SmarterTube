@@ -104,7 +104,7 @@
             android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation|layoutDirection|keyboardHidden"
             android:screenOrientation="behind"
             android:windowSoftInputMode="adjustResize"
-            android:theme="@style/Theme.SmarterTube.Mobile" />
+            android:theme="@style/Theme.SmarterTube.Mobile.TranslucentPanel" />
 
         <!-- Native phone Home screen (Phase 2). singleTask = the root of the app task. -->
         <activity

@@ -46,6 +46,8 @@ public class MobileAppDialogFragment extends Fragment implements AppDialogView {
     private MobileAppDialogAdapter mAdapter;
     private MobileCommentsAdapter mCommentsAdapter;
     private CommentsReceiver mCommentsReceiver;
+    private CommentsReceiver mInlineReceiver;
+    private CommentItem mPendingReplyParent;
     private CommentsState mParentComments;
     private CommentGroup mCurrentGroup;
     private boolean mLoadingMore;
@@ -101,6 +103,11 @@ public class MobileAppDialogFragment extends Fragment implements AppDialogView {
 
         // Hand the loaded comments back to the controller (enables instant restore on reopen) and
         // clear the receiver's callback so it doesn't retain this fragment's views.
+        if (mInlineReceiver != null) {
+            mInlineReceiver.setCallback(null);
+            mInlineReceiver = null;
+        }
+
         if (mCommentsReceiver != null) {
             mCommentsReceiver.onFinish(new CommentsBackup(
                     mCommentsAdapter != null ? mCommentsAdapter.getComments() : null, mCurrentGroup));
@@ -170,10 +177,20 @@ public class MobileAppDialogFragment extends Fragment implements AppDialogView {
             return;
         }
 
-        // A comments view is already active and a different receiver arrives: this is a nested
-        // replies thread replacing the top-level list (the presenter re-enters the live dialog).
-        // Save the top-level state so back restores it, and detach the old callback so a late
-        // top-level page can't append into the replies adapter.
+        // A comments view is already active and a different receiver arrives: this is the nested
+        // replies thread for the comment the user just tapped. Feed it into the existing list,
+        // indented under its parent, instead of replacing the view.
+        if (mCommentsReceiver != null && mCommentsReceiver != receiver && mCommentsAdapter != null
+                && mPendingReplyParent != null) {
+            CommentItem parent = mPendingReplyParent;
+            mPendingReplyParent = null;
+            attachInlineRepliesCallback(receiver, parent);
+            receiver.onStart();
+            return;
+        }
+
+        // Fallback for a nested thread without a known parent (shouldn't normally happen):
+        // swap the whole list, with back restoring the top-level state.
         if (mCommentsReceiver != null && mCommentsReceiver != receiver && mCommentsAdapter != null) {
             mCommentsReceiver.setCallback(null);
             mParentComments = new CommentsState(mCommentsReceiver, mCommentsAdapter.getComments(), mCurrentGroup);
@@ -194,9 +211,7 @@ public class MobileAppDialogFragment extends Fragment implements AppDialogView {
             player.blockEngine(true);
         }
 
-        mCommentsAdapter = new MobileCommentsAdapter(
-                item -> mCommentsReceiver.onCommentClicked(item),
-                item -> mCommentsReceiver.onCommentLongClicked(item));
+        mCommentsAdapter = createCommentsAdapter();
         mList.setAdapter(mCommentsAdapter);
         // setupComments re-runs on the live fragment when a replies thread opens — remove first
         // so the listener isn't registered twice.
@@ -208,6 +223,62 @@ public class MobileAppDialogFragment extends Fragment implements AppDialogView {
         attachCommentsCallback(receiver);
 
         receiver.onStart();
+    }
+
+    private MobileCommentsAdapter createCommentsAdapter() {
+        return new MobileCommentsAdapter(
+                item -> {
+                    // Tap toggles the inline replies thread under the comment.
+                    if (mCommentsAdapter.hasExpandedReplies(item)) {
+                        mCommentsAdapter.collapseReplies(item);
+                    } else {
+                        mPendingReplyParent = item;
+                        mCommentsReceiver.onCommentClicked(item);
+                    }
+                },
+                item -> mCommentsReceiver.onCommentLongClicked(item));
+    }
+
+    /**
+     * Drive a nested replies receiver into the existing list: arriving reply pages are inserted
+     * indented under their parent comment (plus one eager continuation for short first pages,
+     * mirroring the top-level behavior).
+     */
+    private void attachInlineRepliesCallback(final CommentsReceiver receiver, final CommentItem parent) {
+        if (mInlineReceiver != null) {
+            mInlineReceiver.setCallback(null);
+        }
+        mInlineReceiver = receiver;
+
+        receiver.setCallback(new CommentsReceiver.Callback() {
+            private boolean mEagerLoaded;
+
+            @Override
+            public void onCommentGroup(CommentGroup commentGroup) {
+                if (mCommentsAdapter == null || commentGroup == null || commentGroup.getComments() == null) {
+                    return;
+                }
+
+                int added = mCommentsAdapter.insertReplies(parent, commentGroup.getComments());
+
+                if (!mEagerLoaded && added <= 10 && commentGroup.getNextCommentsKey() != null) {
+                    mEagerLoaded = true;
+                    receiver.onLoadMore(commentGroup);
+                }
+            }
+
+            @Override
+            public void onBackup(Backup backup) {
+                // Replies have no backup path.
+            }
+
+            @Override
+            public void onSync(CommentItem commentItem) {
+                if (mCommentsAdapter != null) {
+                    mCommentsAdapter.update(commentItem);
+                }
+            }
+        });
     }
 
     private void attachCommentsCallback(final CommentsReceiver receiver) {
@@ -265,9 +336,7 @@ public class MobileAppDialogFragment extends Fragment implements AppDialogView {
         mCurrentGroup = parent.currentGroup;
         mLoadingMore = false;
 
-        mCommentsAdapter = new MobileCommentsAdapter(
-                item -> mCommentsReceiver.onCommentClicked(item),
-                item -> mCommentsReceiver.onCommentLongClicked(item));
+        mCommentsAdapter = createCommentsAdapter();
         mCommentsAdapter.setComments(parent.items);
         mList.setAdapter(mCommentsAdapter);
 

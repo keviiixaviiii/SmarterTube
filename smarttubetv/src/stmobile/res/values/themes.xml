@@ -15,4 +15,21 @@
     <style name="Theme.SmarterTube.Splash" parent="Theme.SmarterTube.Mobile">
         <item name="android:windowBackground">@drawable/splash_window_background</item>
     </style>
+
+    <!-- Comments over the portrait player: translucent window so the 16:9 video strip at the
+         top stays visible (and the activity below only pauses instead of stopping, keeping
+         playback running). The dialog content is inset below the strip by code.
+
+         This is the MANIFEST theme of MobileAppDialogActivity: windowIsTranslucent is read by
+         the system at activity attach (before onCreate), so it CANNOT be enabled by a runtime
+         setTheme — it must live here. The activity's root layout (mobile_app_dialog_activity.xml)
+         paints a solid @color/mobile_background over match_parent, so the SETTINGS dialog (no top
+         inset) still looks fully opaque; only the comments panel insets the root down, leaving the
+         transparent window above the strip to show the playing video. MobileActivity.initTheme()
+         keeps windowBackground opaque for non-panel use; in panel mode the activity re-applies this
+         theme to restore the transparent windowBackground (which CAN change at runtime). -->
+    <style name="Theme.SmarterTube.Mobile.TranslucentPanel">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+    </style>
 </resources>
