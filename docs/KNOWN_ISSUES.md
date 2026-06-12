@@ -1,0 +1,49 @@
+# SmarterTube Known Issues
+
+Tracked issues for the current beta. Keep this honest and current — it is part of the release
+checklist and what makes a beta release trustworthy.
+
+Current release: `v0.4.0-beta.1+st31.93`  ·  Upstream SmartTube base: `31.93`  ·  Channel: beta
+
+## Status / classification
+
+- SmarterTube is **beta**, not stable. Previous `31.xx-mobile-1.x` releases were labelled as
+  full releases prematurely; they are superseded by the beta reset (see
+  [VERSIONING.md](VERSIONING.md)).
+- Many feature-matrix rows are **Unknown** (not re-verified on a device this cycle). Unknowns
+  for core flows must be resolved before any 1.0 release.
+
+## Known functional gaps
+
+- **Comments are read-only.** Posting comments is blocked on innertube authentication + PoToken
+  work; the TV client has no composer. Not planned for the beta line.
+- **Notification bell / inbox is not implemented.** The upstream notifications source was dead;
+  upload alerts are delivered via a subscriptions-feed poll instead.
+- **No in-app APK install.** "Check for updates" detects a newer release and opens the GitHub
+  asset/release URL; the user installs the APK manually.
+- **Voice search is not implemented** on the phone UI.
+- **Casting / Chromecast is not implemented.**
+
+## Layout / orientation (to be audited in Gate C)
+
+- Phone landscape and tablet portrait/landscape layouts are **unverified**. TV/leanback layout
+  assumptions may leak into these orientations.
+
+## Shorts (full rework is Gate B)
+
+- The current Shorts player uses an **interim top-align at 9:16** with compact controls. The
+  reworked TikTok-style scrolling Shorts player ships in Gate B (`v0.4.1-beta.1+st31.93`).
+
+## Updater notes
+
+- The phone "Check for updates" reads the fork's GitHub releases. Its manifest URL / release
+  data only reflects releases that have actually been published; before the first beta-reset
+  release exists, a check may report "up to date" against whatever is currently published.
+- The upstream auto-update check is inert on the phone (the phone `versionCode` sits far above
+  upstream SmartTube's), so it does not offer upstream TV APKs. See
+  [UPDATER_COMPATIBILITY.md](UPDATER_COMPATIBILITY.md) → As-Built Updater Audit.
+
+## TV functionality
+
+- This is a phone/tablet companion to SmartTube, **not** a TV replacement. The TV/leanback
+  interface is intentionally not part of this product; use upstream SmartTube on a TV.

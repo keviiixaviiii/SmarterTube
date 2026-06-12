@@ -6,7 +6,9 @@ SmarterTube is **not a patched YouTube app and not a wrapper** — it is a nativ
 
 It is a fork of [SmartTube](https://github.com/yuliskov/SmartTube) by yuliskov. It adds a native portrait UI — drawer navigation, search, channel pages, settings, sign-in — on top of SmartTube's YouTube client engine, which is merged from upstream unchanged on every release. Upstream SmartTube is TV-only by design; this fork exists for phones and tablets.
 
-> **Stable.** A complete native phone & tablet UI — Home, Search (with voice), Channel, Channel Uploads, Settings, sign-in, and playback — built on SmartTube's YouTube engine. Unlike app-modifiers, these are real native Android screens, not a repackaged YouTube APK.
+> **Beta.** A native phone & tablet UI — Home, Search, Channel, Channel Uploads, Settings, sign-in, and playback — built on SmartTube's YouTube engine. Core flows work; some upstream features aren't surfaced in the phone UI yet, and landscape/tablet layouts are still being audited. Unlike app-modifiers, these are real native Android screens, not a repackaged YouTube APK.
+>
+> Earlier `31.xx-mobile-1.x` builds were published as full `1.x` releases too early. SmarterTube is now reset to a beta line with a clearer version scheme — see [Versioning & releases](#versioning--releases).
 
 <p align="center">
   <img src="images/phone_browse.png" width="260" alt="Browsing music charts and trending videos"/>
@@ -25,6 +27,25 @@ It is a fork of [SmartTube](https://github.com/yuliskov/SmartTube) by yuliskov. 
 ## Relationship to SmartTube
 
 SmarterTube is an **unofficial fork** of [yuliskov/SmartTube](https://github.com/yuliskov/SmartTube). The playback/client engine, ad blocking, SponsorBlock, Return YouTube Dislike and DeArrow integration — all the under-the-hood behaviour — come from upstream SmartTube, unchanged. This fork's job is to provide a native phone/tablet interface while keeping the upstream structure intact, so non-UI updates can be merged in regularly.
+
+---
+
+## Versioning & releases
+
+SmarterTube is currently **beta**. It uses its own product version and records the upstream SmartTube base separately:
+
+```text
+v0.4.0-beta.1+st31.93
+   |              |
+   |              +-- upstream SmartTube base (metadata only)
+   +-- SmarterTube product version (semver + release channel)
+```
+
+- The SmarterTube app version (`v0.4.0-beta.1`) is tracked **separately** from the upstream SmartTube base (`st31.93`).
+- Earlier `31.xx-mobile-1.x` releases mixed those two numbers and were marked as full `1.x` releases prematurely. They are **superseded** by this beta reset and are treated as legacy by the updater.
+- Public **beta/stable** releases normally track **SmartTube stable**. Upstream SmartTube **beta/head** is used only for SmarterTube **alpha** builds or emergency YouTube-breaking fixes (called out in the release notes).
+
+Full policy: [docs/VERSIONING.md](docs/VERSIONING.md) · [docs/RELEASE_PROCESS.md](docs/RELEASE_PROCESS.md) · [docs/UPDATER_COMPATIBILITY.md](docs/UPDATER_COMPATIBILITY.md). Per-release status lives in [docs/FEATURE_MATRIX.md](docs/FEATURE_MATRIX.md) and [docs/KNOWN_ISSUES.md](docs/KNOWN_ISSUES.md).
 
 ---
 
@@ -69,13 +90,15 @@ Official builds are published only on this GitHub Releases page unless another s
 
 ### Verifying your download
 
+Release APKs are named `SmarterTube-<version>-st<base>-<arch>.apk` (e.g. `SmarterTube-v0.4.0-beta.1-st31.93-arm64-v8a.apk`).
+
 Every APK on the Releases page carries a **SHA-256 digest**, shown by GitHub next to the asset. After downloading, compare it against the file on your device:
 
 ```bash
 # Linux/macOS
-sha256sum SmarterTube_*.apk
+sha256sum SmarterTube-*.apk
 # Windows (PowerShell)
-Get-FileHash SmarterTube_*.apk -Algorithm SHA256
+Get-FileHash SmarterTube-*.apk -Algorithm SHA256
 ```
 
 If the hash matches the one GitHub shows for that asset, the file is intact.
@@ -106,7 +129,7 @@ If the hash matches the one GitHub shows for that asset, the file is intact.
 
 ## Known limitations & risks
 
-SmarterTube is a stable release, but a few realities are worth knowing before you install:
+SmarterTube is a **beta** release. A few realities are worth knowing before you install:
 
 - **Not all upstream features are surfaced yet** — the phone UI covers the core journey (Home, Search, Channel, Settings, sign-in, playback); some upstream options remain reachable only through the settings screens, and a few aren't wired into the phone UI at all.
 - **Upstream / YouTube breakage** — YouTube changes its private APIs without warning, which can break playback at any time. Fixes depend on upstream SmartTube's cadence, then a re-merge here.

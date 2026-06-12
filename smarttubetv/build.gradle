@@ -130,7 +130,18 @@ android {
             def arch = output.getFilter(com.android.build.OutputFile.ABI)
             arch = arch != null ? arch : "universal"
 
-            def newApkName = sprintf("%s_%s_%s_%s.apk", [project, flavor, version, arch])
+            def newApkName
+            if (flavor == "mobile") {
+                // SmarterTube asset naming (docs/VERSIONING.md, docs/UPDATER_COMPATIBILITY.md):
+                //   SmarterTube-v0.4.0-beta.1-st31.93-<arch>.apk
+                // The updater's ApkAssetSelector matches the <arch> token; '+' is not filename-safe
+                // so the "+st" metadata separator becomes "-st".
+                def assetVersion = version.replace("+", "-")
+                newApkName = sprintf("SmarterTube-%s-%s.apk", [assetVersion, arch])
+            } else {
+                // Upstream TV flavors keep their existing naming.
+                newApkName = sprintf("%s_%s_%s_%s.apk", [project, flavor, version, arch])
+            }
 
             // gradle 4.6 migration
             output.outputFileName = new File(newApkName)
@@ -186,15 +197,22 @@ android {
             targetSdkVersion 33
             // Phone-port versioning. Lives in the flavor (not defaultConfig) so
             // upstream merges don't conflict on versionCode/versionName lines.
-            // versionCode is INDEPENDENT of upstream's code: just increment it by
-            // 1 past the last shipped fork release (Android rejects a lower code
-            // for in-place upgrade). The old "upstream * 10" rule was dropped at
-            // 31.77 (upstream's code stopped tracking its versionName).
-            // History: alpha1-4 = 23701-23704, beta1 = 23705, 1.0 = 23706,
-            // 1.1 = 23707, 1.2 = 23708 → next is 23709.
-            // versionName = "<upstream>-mobile-<major>.<minor>".
-            versionCode 23710
-            versionName "31.93-mobile-1.4"
+            //
+            // versionName follows the SmarterTube beta-reset scheme (docs/VERSIONING.md):
+            //   v<app-semver>[-<channel>.<n>]+st<upstream-base>
+            // e.g. v0.4.0-beta.1+st31.93 — the SmarterTube product version is tracked
+            // separately from the upstream SmartTube base (+st31.93). The previous
+            // "<upstream>-mobile-<x.y>" names (e.g. 31.93-mobile-1.4) are LEGACY; the
+            // updater recognises and supersedes them (see SmarterTubeVersion).
+            //
+            // versionCode is INDEPENDENT of upstream's code and MUST increase by 1 past
+            // the last shipped fork release (Android rejects a lower code for in-place
+            // upgrade); this is what makes a beta-reset build supersede the legacy ones.
+            // History: alpha1-4 = 23701-23704, beta1 = 23705, 1.0 = 23706, 1.1 = 23707,
+            // 1.2 = 23708, 1.3 = 23709, 1.4 (31.93-mobile-1.4) = 23710.
+            // 23711 = v0.4.0-beta.1+st31.93 (Gate A beta reset). Gate B Shorts = 23712.
+            versionCode 23711
+            versionName "v0.4.0-beta.1+st31.93"
         }
     }
 }
