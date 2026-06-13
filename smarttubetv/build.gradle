@@ -50,6 +50,10 @@ android {
     compileSdkVersion project.properties.compileSdkVersion
     buildToolsVersion project.properties.buildToolsVersion
     testOptions.unitTests.includeAndroidResources = true
+    // Non-Robolectric JVM unit tests (e.g. the stmobile update/* suite) call android.util.Log,
+    // whose android.jar stub otherwise throws "Method d/e not mocked". Return defaults so plain
+    // logic tests run; Robolectric tests are unaffected (they shadow android with real impls).
+    testOptions.unitTests.returnDefaultValues = true
     ndkVersion "21.0.6113669" // reduce size of the *.so files (stripping debug symbols)
     
     defaultConfig {
@@ -255,6 +259,9 @@ dependencies {
 
     testImplementation 'junit:junit:' + junitVersion
     testImplementation 'org.robolectric:robolectric:' + robolectricVersion
+    // Real org.json for JVM unit tests: android.jar's org.json is a stub (returns defaults under
+    // returnDefaultValues), so the stmobile update/* parser tests need a working implementation.
+    testImplementation 'org.json:json:20231013'
     androidTestImplementation 'androidx.test.ext:junit:' + testXSupportVersion
     androidTestImplementation 'androidx.test.ext:truth:' + testXSupportVersion
     androidTestImplementation 'androidx.test:runner:' + testXSupportVersion
