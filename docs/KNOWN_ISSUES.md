@@ -33,7 +33,11 @@ Current release: `v0.4.2-beta.1+st31.94`  ·  Upstream SmartTube base: `31.94`  
 
 - The TikTok-style Shorts redesign shipped in Gate B (`v0.4.1-beta.1+st31.93`) and is
   **VERIFIED-ON-DEVICE**: swipe pager, tap-to-pause, vertical action rail (like/dislike/comments/
-  channel), auto-hide chrome, seek bar above system gesture pill. No known Shorts-specific issues.
+  channel), auto-hide chrome, seek bar above system gesture pill.
+- Gate C fixed a loop regression: upstream 31.94 changed the repeat handler from
+  `setPositionMs(100)` to `setPositionMs(0)`; the seek to 0ms briefly blanked the surface on
+  loop. Fixed in stmobile by covering the seek with the current video's thumbnail poster.
+  **VERIFIED-ON-DEVICE Gate C.** No remaining Shorts-specific issues.
 
 ## Updater notes
 
