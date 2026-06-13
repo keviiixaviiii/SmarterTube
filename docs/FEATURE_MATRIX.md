@@ -15,7 +15,7 @@ Status values:
 > **Unknown blocks a stable (1.0) release** for core user flows. Beta releases may ship with
 > Unknown rows, but they must be listed here honestly rather than assumed to work.
 
-Last reviewed for: `v0.4.0-beta.1+st31.93` (Gate A). Most rows below are carried from prior
+Last reviewed for: `v0.4.1-beta.1+st31.93` (Gate B). Most rows below are carried from prior
 shipped behaviour and **have not been re-verified on a device this cycle** — treat anything not
 explicitly re-tested as provisional and confirm against the release checklist before 1.0.
 
@@ -55,7 +55,7 @@ explicitly re-tested as provisional and confirm against the release checklist be
 | Portrait player | Partially works | Shipped 31.93-mobile-1.4; verify controls/comments |
 | In-panel comments (portrait) | Partially works | Read-only; posting is blocked on auth/PoToken |
 | Comments posting | Not implemented | Blocked on innertube auth + PoToken |
-| Shorts playback | Partially works | Interim top-align; full rework is Gate B |
+| Shorts playback | Works | TikTok-style UX: swipe pager, tap-to-pause, vertical action rail (like/dislike/comments/channel), auto-hide chrome. VERIFIED-ON-DEVICE Gate B. |
 | Play / pause / seek | Works | |
 | Quality menu | Unknown | |
 | Captions | Unknown | |

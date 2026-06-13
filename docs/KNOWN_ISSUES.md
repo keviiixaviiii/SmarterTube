@@ -3,7 +3,7 @@
 Tracked issues for the current beta. Keep this honest and current — it is part of the release
 checklist and what makes a beta release trustworthy.
 
-Current release: `v0.4.0-beta.1+st31.93`  ·  Upstream SmartTube base: `31.93`  ·  Channel: beta
+Current release: `v0.4.1-beta.1+st31.93`  ·  Upstream SmartTube base: `31.93`  ·  Channel: beta
 
 ## Status / classification
 
@@ -29,10 +29,11 @@ Current release: `v0.4.0-beta.1+st31.93`  ·  Upstream SmartTube base: `31.93`  
 - Phone landscape and tablet portrait/landscape layouts are **unverified**. TV/leanback layout
   assumptions may leak into these orientations.
 
-## Shorts (full rework is Gate B)
+## Shorts
 
-- The current Shorts player uses an **interim top-align at 9:16** with compact controls. The
-  reworked TikTok-style scrolling Shorts player ships in Gate B (`v0.4.1-beta.1+st31.93`).
+- The TikTok-style Shorts redesign shipped in Gate B (`v0.4.1-beta.1+st31.93`) and is
+  **VERIFIED-ON-DEVICE**: swipe pager, tap-to-pause, vertical action rail (like/dislike/comments/
+  channel), auto-hide chrome, seek bar above system gesture pill. No known Shorts-specific issues.
 
 ## Updater notes
 
