@@ -133,7 +133,7 @@ android {
             def newApkName
             if (flavor == "mobile") {
                 // SmarterTube asset naming (docs/VERSIONING.md, docs/UPDATER_COMPATIBILITY.md):
-                //   SmarterTube-v0.4.0-beta.1-st31.93-<arch>.apk
+                //   SmarterTube-v0.4.1-beta.1-st31.93-<arch>.apk
                 // The updater's ApkAssetSelector matches the <arch> token; '+' is not filename-safe
                 // so the "+st" metadata separator becomes "-st".
                 def assetVersion = version.replace("+", "-")
@@ -211,8 +211,8 @@ android {
             // History: alpha1-4 = 23701-23704, beta1 = 23705, 1.0 = 23706, 1.1 = 23707,
             // 1.2 = 23708, 1.3 = 23709, 1.4 (31.93-mobile-1.4) = 23710.
             // 23711 = v0.4.0-beta.1+st31.93 (Gate A beta reset). Gate B Shorts = 23712.
-            versionCode 23711
-            versionName "v0.4.0-beta.1+st31.93"
+            versionCode 23712
+            versionName "v0.4.1-beta.1+st31.93"
         }
     }
 }
