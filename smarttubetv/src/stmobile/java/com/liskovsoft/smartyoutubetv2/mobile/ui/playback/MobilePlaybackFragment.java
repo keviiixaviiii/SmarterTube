@@ -113,6 +113,7 @@ public class MobilePlaybackFragment extends PlaybackFragment {
     // until the new video is actually rendering — eliminates the black flash. A timeout is the
     // safety net in case the play signal never arrives (e.g. unplayable video).
     private boolean mAwaitingShortsFrame;
+    private boolean mAwaitingShortsLoop;  // true while covering a PLAYBACK_MODE_ONE loop-restart
     private String  mSwipeFromVideoId;
     private static final int SHORTS_FRAME_POLL_MS = 50;
     private static final int SHORTS_FRAME_TIMEOUT_MS = 2500;
@@ -143,7 +144,10 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         mChromeHandler.removeCallbacks(mHideShortsChr);
         mChromeHandler.removeCallbacks(mShortsFramePoll);
         mChromeHandler.removeCallbacks(mShortsFrameTimeout);
+        mChromeHandler.removeCallbacks(mShortsLoopPoll);
+        mChromeHandler.removeCallbacks(mShortsLoopTimeout);
         mAwaitingShortsFrame = false;
+        mAwaitingShortsLoop = false;
     }
 
     @Override
@@ -847,6 +851,49 @@ public class MobilePlaybackFragment extends PlaybackFragment {
     };
 
     private final Runnable mShortsFrameTimeout = this::finishShortsTransition;
+
+    // Covers the black frame at position 0 that occurs when a Short loops via PLAYBACK_MODE_ONE.
+    // In 31.94 upstream changed setPositionMs(100) → setPositionMs(0); the seek briefly blanks
+    // the surface. We intercept setPositionMs, show a poster, and remove it once rendering resumes.
+    @Override
+    public void setPositionMs(long positionMs) {
+        if (mLayoutState == 2 && positionMs < 500L
+                && !mAwaitingShortsFrame && !mAwaitingShortsLoop) {
+            Video current = PlaybackPresenter.instance(getContext()).getVideo();
+            loadPoster(mShortsNextPoster, current);
+            awaitShortsLoopFrame();
+        }
+        super.setPositionMs(positionMs);
+    }
+
+    private void awaitShortsLoopFrame() {
+        mAwaitingShortsLoop = true;
+        mChromeHandler.removeCallbacks(mShortsLoopPoll);
+        mChromeHandler.removeCallbacks(mShortsLoopTimeout);
+        mChromeHandler.postDelayed(mShortsLoopPoll, SHORTS_FRAME_POLL_MS);
+        mChromeHandler.postDelayed(mShortsLoopTimeout, SHORTS_FRAME_TIMEOUT_MS);
+    }
+
+    private final Runnable mShortsLoopPoll = new Runnable() {
+        @Override
+        public void run() {
+            if (!mAwaitingShortsLoop) return;
+            if (isPlaying() && getPositionMs() > 50) {
+                finishShortsLoop();
+            } else {
+                mChromeHandler.postDelayed(this, SHORTS_FRAME_POLL_MS);
+            }
+        }
+    };
+
+    private final Runnable mShortsLoopTimeout = this::finishShortsLoop;
+
+    private void finishShortsLoop() {
+        mAwaitingShortsLoop = false;
+        mChromeHandler.removeCallbacks(mShortsLoopPoll);
+        mChromeHandler.removeCallbacks(mShortsLoopTimeout);
+        fadeOutPoster(mShortsNextPoster);
+    }
 
     /** New Short is rendering (or timed out): fade the covering poster away and warm the next one. */
     private void finishShortsTransition() {
