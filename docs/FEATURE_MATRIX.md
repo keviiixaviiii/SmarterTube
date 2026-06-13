@@ -15,7 +15,7 @@ Status values:
 > **Unknown blocks a stable (1.0) release** for core user flows. Beta releases may ship with
 > Unknown rows, but they must be listed here honestly rather than assumed to work.
 
-Last reviewed for: `v0.4.1-beta.1+st31.93` (Gate B). Most rows below are carried from prior
+Last reviewed for: `v0.4.2-beta.1+st31.94` (Gate C). Most rows below are carried from prior
 shipped behaviour and **have not been re-verified on a device this cycle** — treat anything not
 explicitly re-tested as provisional and confirm against the release checklist before 1.0.
 
