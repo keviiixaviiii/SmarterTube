@@ -580,6 +580,15 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         applyLeanbackControlsVisibility(mLayoutState == 2);
     }
 
+    @Override
+    public void hideControlsOverlay(boolean runAnimation) {
+        // In Shorts the seek bar must stay visible at all times. The transport buttons
+        // (controls_dock, secondary_controls_dock, time_info) are already GONE via
+        // applyLeanbackControlsVisibility, so skipping Leanback's fade has no phantom-tap risk.
+        if (mLayoutState == 2) return;
+        super.hideControlsOverlay(runAnimation);
+    }
+
     /**
      * Hide the Leanback transport buttons (play/pause/skip/time) while keeping the seek bar
      * visible for Shorts. Controls are inflated lazily — null-checks are intentional; this is
