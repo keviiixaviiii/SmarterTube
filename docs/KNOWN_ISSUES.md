@@ -3,7 +3,7 @@
 Tracked issues for the current beta. Keep this honest and current — it is part of the release
 checklist and what makes a beta release trustworthy.
 
-Current release: `v0.4.2-beta.1+st31.94`  ·  Upstream SmartTube base: `31.94`  ·  Channel: beta
+Current release: `v0.4.2-beta.2+st31.94`  ·  Upstream SmartTube base: `31.94`  ·  Channel: beta
 
 ## Status / classification
 
@@ -12,6 +12,15 @@ Current release: `v0.4.2-beta.1+st31.94`  ·  Upstream SmartTube base: `31.94`  
   [VERSIONING.md](VERSIONING.md)).
 - Many feature-matrix rows are **Unknown** (not re-verified on a device this cycle). Unknowns
   for core flows must be resolved before any 1.0 release.
+
+## Background playback + lockscreen controls (added beta.2)
+
+- **Background audio** is now on by default (BACKGROUND_MODE_SOUND). Locking the phone keeps
+  audio playing. Users can change this in player settings.
+- **Lockscreen media controls** appear on the Android lockscreen and notification shade, showing
+  the current video title and author. Controls update as you navigate between videos.
+- **Seeking from the lockscreen** is not supported (the MediaSession does not expose a seek
+  action through the notification compact view). This may be added in a later release.
 
 ## Known functional gaps
 
