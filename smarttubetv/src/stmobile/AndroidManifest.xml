@@ -90,7 +90,6 @@
             android:screenOrientation="behind"
             android:supportsPictureInPicture="true"
             android:resizeableActivity="true"
-            android:showWhenLocked="true"
             android:theme="@style/App.Theme.Leanback.Player" />
 
         <!-- Native phone settings dialog (Phase 4 part 2). screenOrientation="behind" so

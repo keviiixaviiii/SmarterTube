@@ -1,10 +1,13 @@
 package com.liskovsoft.smartyoutubetv2.mobile.ui.playback;
 
 import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
 import android.os.Handler;
+import android.support.v4.media.session.MediaSessionCompat;
 import android.text.TextUtils;
 import android.view.MotionEvent;
 import android.view.View;
@@ -18,6 +21,8 @@ import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import androidx.core.content.ContextCompat;
+
 import com.bumptech.glide.Glide;
 import com.liskovsoft.mediaserviceinterfaces.data.MediaGroup;
 import com.liskovsoft.mediaserviceinterfaces.oauth.Account;
@@ -29,6 +34,7 @@ import com.liskovsoft.smartyoutubetv2.common.app.models.playback.manager.PlayerU
 import com.liskovsoft.smartyoutubetv2.common.app.presenters.BrowsePresenter;
 import com.liskovsoft.smartyoutubetv2.common.app.presenters.PlaybackPresenter;
 import com.liskovsoft.smartyoutubetv2.common.misc.MediaServiceManager;
+import com.liskovsoft.smartyoutubetv2.common.misc.RemoteControlService;
 import com.liskovsoft.smartyoutubetv2.tv.R;
 import com.liskovsoft.smartyoutubetv2.tv.ui.playback.PlaybackFragment;
 import com.liskovsoft.smartyoutubetv2.tv.ui.playback.other.VideoPlayerGlue;
@@ -120,6 +126,9 @@ public class MobilePlaybackFragment extends PlaybackFragment {
     // Tint applied to the rail like/dislike icon when active (YouTube blue).
     private static final int SHORTS_ACTIVE_TINT = 0xFF3EA6FF;
 
+    // Held so we can re-send the lockscreen notification when the video changes.
+    private MediaSessionCompat.Token mSessionToken;
+
     // Auto-hide for the Shorts overlay chrome (rail + back button).
     private final Handler mChromeHandler = new Handler();
     private final Runnable mHideShortsChr = () -> setShortsChrome(false);
@@ -136,6 +145,20 @@ public class MobilePlaybackFragment extends PlaybackFragment {
     public void onResume() {
         super.onResume();
         applyMobileLayout();
+    }
+
+    @Override
+    protected void onMediaSessionCreated(MediaSessionCompat session) {
+        mSessionToken = session != null ? session.getSessionToken() : null;
+        Context ctx = getContext();
+        if (ctx == null) return;
+        Intent intent = new Intent(ctx, RemoteControlService.class);
+        if (mSessionToken != null) {
+            intent.putExtra(RemoteControlService.EXTRA_SESSION_TOKEN, mSessionToken);
+            ContextCompat.startForegroundService(ctx, intent);
+        } else {
+            ctx.startService(intent); // revert to plain notification; service stays for remote control
+        }
     }
 
     @Override
@@ -170,6 +193,19 @@ public class MobilePlaybackFragment extends PlaybackFragment {
             bindHeader(video);
         }
         applyMobileLayout();
+
+        // Keep the lockscreen notification header in sync with the current video.
+        // The MediaSession persists across video changes, so onMediaSessionCreated isn't
+        // re-fired — re-send the intent here so RemoteControlService rebuilds from the
+        // new PlaybackPresenter.getVideo() value.
+        if (mSessionToken != null && video != null) {
+            Context ctx = getContext();
+            if (ctx != null) {
+                Intent intent = new Intent(ctx, RemoteControlService.class);
+                intent.putExtra(RemoteControlService.EXTRA_SESSION_TOKEN, mSessionToken);
+                ContextCompat.startForegroundService(ctx, intent);
+            }
+        }
 
         // Committed Short arrived: the exit animation parked the incoming poster at screen-centre
         // showing this video's thumbnail. Snap the live surface back to centre *underneath* the

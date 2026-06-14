@@ -429,6 +429,7 @@ public class PlaybackFragment extends SeekModePlaybackFragment implements Playba
             mMediaSessionConnector = null;
         }
         if (mMediaSession != null) {
+            onMediaSessionCreated(null);
             mMediaSession.setActive(false);
             mMediaSession.release();
             mMediaSession = null;
@@ -680,7 +681,12 @@ public class PlaybackFragment extends SeekModePlaybackFragment implements Playba
                 return super.dispatchSetPlayWhenReady(player, playWhenReady);
             }
         });
+
+        onMediaSessionCreated(mMediaSession);
     }
+
+    /** Called when the MediaSession is ready, and with null when it is released. */
+    protected void onMediaSessionCreated(MediaSessionCompat session) {}
 
     private void initializePlayerRows() {
         mRowsSupportFragment = (RowsSupportFragment) getChildFragmentManager().findFragmentById(
