@@ -35,6 +35,24 @@
             android:ellipsize="end"
             android:textColor="@color/mobile_text_primary"
             android:textSize="18sp" />
+
+        <TextView
+            android:id="@+id/btn_subscribe"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="12dp"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp"
+            android:background="@drawable/bg_subscribe_pill"
+            android:foreground="?android:attr/selectableItemBackground"
+            android:singleLine="true"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:textColor="@color/brand_accent_on"
+            android:visibility="gone" />
     </LinearLayout>
 
     <FrameLayout
