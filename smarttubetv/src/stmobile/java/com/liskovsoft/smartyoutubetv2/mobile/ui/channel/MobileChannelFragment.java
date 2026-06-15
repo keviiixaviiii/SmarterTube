@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -14,8 +15,11 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import android.app.AlertDialog;
 import com.liskovsoft.mediaserviceinterfaces.MediaItemService;
+import java.util.List;
 import com.liskovsoft.mediaserviceinterfaces.ServiceManager;
+import com.liskovsoft.mediaserviceinterfaces.data.NotificationState;
 import com.liskovsoft.sharedutils.helpers.MessageHelpers;
 import com.liskovsoft.sharedutils.rx.RxHelper;
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.Video;
@@ -49,10 +53,12 @@ public class MobileChannelFragment extends Fragment implements ChannelView {
     private int mShelfCardWidth;
     private boolean mSwipeRefreshing;
     private TextView mSubscribeButton;
+    private ImageView mBellButton;
     private MediaItemService mItemService;
     private boolean mSubscribed;
     private boolean mSubscriptionResolved;
     private Disposable mSubscribeAction;
+    private List<NotificationState> mNotificationStates;
 
     @Nullable
     @Override
@@ -70,6 +76,7 @@ public class MobileChannelFragment extends Fragment implements ChannelView {
         mProgressBar = view.findViewById(R.id.progress_bar);
         mTitleView = view.findViewById(R.id.channel_title);
         mSubscribeButton = view.findViewById(R.id.btn_subscribe);
+        mBellButton = (ImageView) view.findViewById(R.id.btn_bell);
 
         view.findViewById(R.id.btn_back).setOnClickListener(v -> {
             if (getActivity() != null) {
@@ -183,8 +190,48 @@ public class MobileChannelFragment extends Fragment implements ChannelView {
         }
 
         updateSubscribeButton();
+        updateBellButton();
         MessageHelpers.showMessage(getContext(), getString(
                 mSubscribed ? R.string.subscribed_to_channel : R.string.unsubscribed_from_channel));
+    }
+
+    private void updateBellButton() {
+        if (mBellButton == null) {
+            return;
+        }
+        boolean show = mSubscribed && mNotificationStates != null && !mNotificationStates.isEmpty();
+        mBellButton.setVisibility(show ? View.VISIBLE : View.GONE);
+        if (show) {
+            mBellButton.setOnClickListener(v -> showBellDialog());
+        }
+    }
+
+    private void showBellDialog() {
+        if (mNotificationStates == null || mNotificationStates.isEmpty() || getContext() == null) {
+            return;
+        }
+        String[] titles = new String[mNotificationStates.size()];
+        int checkedItem = -1;
+        for (int i = 0; i < mNotificationStates.size(); i++) {
+            NotificationState s = mNotificationStates.get(i);
+            titles[i] = s.getTitle() != null ? s.getTitle() : "";
+            if (s.isSelected()) {
+                checkedItem = i;
+            }
+        }
+        final int[] selected = {checkedItem};
+        new AlertDialog.Builder(getContext())
+                .setSingleChoiceItems(titles, checkedItem, (dialog, which) -> selected[0] = which)
+                .setPositiveButton(android.R.string.ok, (dialog, which) -> {
+                    if (selected[0] >= 0 && selected[0] < mNotificationStates.size()) {
+                        NotificationState state = mNotificationStates.get(selected[0]);
+                        MediaServiceManager.instance().setNotificationState(state,
+                                e -> MessageHelpers.showMessage(getContext(),
+                                        "Couldn't update notification preference"));
+                    }
+                })
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
     }
 
     /**
@@ -214,6 +261,11 @@ public class MobileChannelFragment extends Fragment implements ChannelView {
                 channel.isSubscribed = mSubscribed;
             }
             updateSubscribeButton();
+            List<NotificationState> states = metadata.getNotificationStates();
+            if (states != null && !states.isEmpty()) {
+                mNotificationStates = states;
+            }
+            updateBellButton();
         });
     }
 

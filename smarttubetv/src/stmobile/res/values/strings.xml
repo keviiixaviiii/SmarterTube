@@ -45,6 +45,9 @@
     <string name="mobile_theme_option_light">Light</string>
     <string name="mobile_theme_option_dark">Dark</string>
 
+    <!-- Channel page -->
+    <string name="notification_bell">Notification preference</string>
+
     <!-- Upload notifications (Part 2 - push) -->
     <string name="mobile_notifications_title">Upload notifications</string>
     <string name="mobile_notifications_summary">Get notified when channels you follow upload</string>
