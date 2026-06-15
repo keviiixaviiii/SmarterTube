@@ -217,8 +217,9 @@ android {
             // 23711 = v0.4.0-beta.1+st31.93 (Gate A beta reset). Gate B Shorts = 23712.
             // 23713 = v0.4.2-beta.1+st31.94 (Gate C: upstream 31.94 sync + Shorts loop fix).
             // 23714 = v0.4.2-beta.2+st31.94 (lockscreen + background audio default).
-            versionCode 23715
-            versionName "v0.4.2-beta.3+st31.94"
+            // 23715 = v0.4.2-beta.3+st31.94 (subscribe/unsubscribe + notification bell on channel page).
+            versionCode 23716
+            versionName "v0.4.2-beta.4+st31.94"
         }
     }
 }

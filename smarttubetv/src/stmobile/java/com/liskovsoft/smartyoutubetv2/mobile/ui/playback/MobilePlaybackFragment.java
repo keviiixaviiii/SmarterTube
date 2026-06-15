@@ -32,6 +32,7 @@ import com.liskovsoft.smartyoutubetv2.common.app.models.data.VideoGroup;
 import com.liskovsoft.smartyoutubetv2.common.app.models.playback.controllers.SuggestionsController;
 import com.liskovsoft.smartyoutubetv2.common.app.models.playback.manager.PlayerUI;
 import com.liskovsoft.smartyoutubetv2.common.app.presenters.BrowsePresenter;
+import com.liskovsoft.smartyoutubetv2.common.app.presenters.ChannelPresenter;
 import com.liskovsoft.smartyoutubetv2.common.app.presenters.PlaybackPresenter;
 import com.liskovsoft.smartyoutubetv2.common.misc.MediaServiceManager;
 import com.liskovsoft.smartyoutubetv2.common.misc.RemoteControlService;
@@ -82,6 +83,10 @@ public class MobilePlaybackFragment extends PlaybackFragment {
     private LinearLayout mShortsInfoBar;
     private TextView mShortsTitleView;
     private TextView mShortsChannelView;
+    // Portrait meta-block like/dislike buttons.
+    private ImageView mPortraitLikeBtn;
+    private ImageView mPortraitDislikeBtn;
+
     // Action rail buttons — resolved lazily from within the included layout.
     private ImageView mShortsLikeBtn;
     private TextView mShortsLikeCount;
@@ -269,12 +274,12 @@ public class MobilePlaybackFragment extends PlaybackFragment {
 
     /** Tint the rail like/dislike icons to match the current button state. */
     private void syncLikeDislikeTint() {
-        if (mShortsLikeBtn != null) {
-            tintRailButton(mShortsLikeBtn, getButtonState(R.id.action_thumbs_up) == PlayerUI.BUTTON_ON);
-        }
-        if (mShortsDislikeBtn != null) {
-            tintRailButton(mShortsDislikeBtn, getButtonState(R.id.action_thumbs_down) == PlayerUI.BUTTON_ON);
-        }
+        boolean liked    = getButtonState(R.id.action_thumbs_up)   == PlayerUI.BUTTON_ON;
+        boolean disliked = getButtonState(R.id.action_thumbs_down) == PlayerUI.BUTTON_ON;
+        if (mShortsLikeBtn    != null) tintRailButton(mShortsLikeBtn,    liked);
+        if (mShortsDislikeBtn != null) tintRailButton(mShortsDislikeBtn, disliked);
+        if (mPortraitLikeBtn    != null) tintRailButton(mPortraitLikeBtn,    liked);
+        if (mPortraitDislikeBtn != null) tintRailButton(mPortraitDislikeBtn, disliked);
     }
 
     private void tintRailButton(ImageView btn, boolean active) {
@@ -293,10 +298,13 @@ public class MobilePlaybackFragment extends PlaybackFragment {
     @Override
     public void setButtonState(int buttonId, int buttonState) {
         super.setButtonState(buttonId, buttonState);
-        if (buttonId == R.id.action_thumbs_up && mShortsLikeBtn != null) {
-            tintRailButton(mShortsLikeBtn, buttonState == PlayerUI.BUTTON_ON);
-        } else if (buttonId == R.id.action_thumbs_down && mShortsDislikeBtn != null) {
-            tintRailButton(mShortsDislikeBtn, buttonState == PlayerUI.BUTTON_ON);
+        boolean active = buttonState == PlayerUI.BUTTON_ON;
+        if (buttonId == R.id.action_thumbs_up) {
+            if (mShortsLikeBtn    != null) tintRailButton(mShortsLikeBtn,    active);
+            if (mPortraitLikeBtn  != null) tintRailButton(mPortraitLikeBtn,  active);
+        } else if (buttonId == R.id.action_thumbs_down) {
+            if (mShortsDislikeBtn    != null) tintRailButton(mShortsDislikeBtn,    active);
+            if (mPortraitDislikeBtn  != null) tintRailButton(mPortraitDislikeBtn,  active);
         }
     }
 
@@ -1049,6 +1057,29 @@ public class MobilePlaybackFragment extends PlaybackFragment {
                 video -> PlaybackPresenter.instance(getContext()).onSuggestionItemClicked(video));
         mUpNextList.setLayoutManager(new LinearLayoutManager(getContext()));
         mUpNextList.setAdapter(mUpNextAdapter);
+
+        View channelRow = activity.findViewById(R.id.mobile_video_channel_row);
+        if (channelRow != null) {
+            channelRow.setOnClickListener(v -> {
+                Video current = PlaybackPresenter.instance(getContext()).getVideo();
+                if (current != null) ChannelPresenter.instance(getContext()).openChannel(current);
+            });
+        }
+
+        mPortraitLikeBtn = activity.findViewById(R.id.mobile_video_like_btn);
+        mPortraitDislikeBtn = activity.findViewById(R.id.mobile_video_dislike_btn);
+        if (mPortraitLikeBtn != null) {
+            mPortraitLikeBtn.setOnClickListener(v ->
+                    PlaybackPresenter.instance(getContext())
+                            .onButtonClicked(R.id.action_thumbs_up,
+                                    currentButtonState(R.id.action_thumbs_up)));
+        }
+        if (mPortraitDislikeBtn != null) {
+            mPortraitDislikeBtn.setOnClickListener(v ->
+                    PlaybackPresenter.instance(getContext())
+                            .onButtonClicked(R.id.action_thumbs_down,
+                                    currentButtonState(R.id.action_thumbs_down)));
+        }
 
         initShortsViews(activity);
 
