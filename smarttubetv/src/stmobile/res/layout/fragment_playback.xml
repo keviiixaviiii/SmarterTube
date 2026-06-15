@@ -85,7 +85,7 @@
         android:src="@drawable/ic_shorts_back"
         android:background="@android:color/transparent"
         android:scaleType="center"
-        android:visibility="invisible"
+        android:visibility="visible"
         android:contentDescription="Back"
         app:layout_constraintStart_toStartOf="@id/playback_controls_fragment"
         app:layout_constraintTop_toTopOf="@id/playback_controls_fragment"

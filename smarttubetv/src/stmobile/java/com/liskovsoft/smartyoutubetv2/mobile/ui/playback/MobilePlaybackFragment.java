@@ -578,7 +578,7 @@ public class MobilePlaybackFragment extends PlaybackFragment {
             mShortsInfoBar.setVisibility(isShorts && strip ? View.VISIBLE : View.GONE);
         }
         if (mShortsNavBar != null) {
-            mShortsNavBar.setVisibility(isShorts && strip ? View.VISIBLE : View.GONE);
+            mShortsNavBar.setVisibility(strip ? View.VISIBLE : View.GONE);
         }
 
         // Leanback suggestion rows: removed while in the strip (they draw inside the small video
@@ -598,7 +598,7 @@ public class MobilePlaybackFragment extends PlaybackFragment {
             set.setDimensionRatio(R.id.playback_controls_fragment, ratio);
             set.setVisibility(R.id.mobile_below_video_panel, showPanel ? View.VISIBLE : View.GONE);
             set.setVisibility(R.id.mobile_shorts_info_bar, isShorts ? View.VISIBLE : View.GONE);
-            set.setVisibility(R.id.mobile_shorts_nav_bar, isShorts ? View.VISIBLE : View.GONE);
+            set.setVisibility(R.id.mobile_shorts_nav_bar, View.VISIBLE);
         } else {
             set.connect(R.id.playback_controls_fragment, ConstraintSet.BOTTOM,
                     ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM);
@@ -622,6 +622,8 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         applyOverlayDecorVisibility(mStripMode);
         // Re-hide the Leanback buttons for Shorts after the lazy inflate.
         applyLeanbackControlsVisibility(mLayoutState == 2);
+        // Back button follows the player controls on all non-Shorts pages.
+        if (mShortsBackBtn != null && mLayoutState != 2) mShortsBackBtn.setVisibility(View.VISIBLE);
     }
 
     @Override
@@ -630,6 +632,7 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         // (controls_dock, secondary_controls_dock, time_info) are already GONE via
         // applyLeanbackControlsVisibility, so skipping Leanback's fade has no phantom-tap risk.
         if (mLayoutState == 2) return;
+        if (mShortsBackBtn != null) mShortsBackBtn.setVisibility(View.INVISIBLE);
         super.hideControlsOverlay(runAnimation);
     }
 
@@ -652,7 +655,8 @@ public class MobilePlaybackFragment extends PlaybackFragment {
     private void setShortsChrome(boolean visible) {
         int vis = visible ? View.VISIBLE : View.INVISIBLE;
         if (mShortsActionRail != null) mShortsActionRail.setVisibility(vis);
-        if (mShortsBackBtn != null) mShortsBackBtn.setVisibility(vis);
+        // Back button is always-visible in regular portrait; only auto-hide it in Shorts.
+        if (mShortsBackBtn != null && mLayoutState == 2) mShortsBackBtn.setVisibility(vis);
     }
 
     /** Reveal the Shorts overlay chrome for 3 seconds, then auto-hide. No-op outside Shorts. */
@@ -1141,14 +1145,22 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         // Bottom navigation bar.
         mShortsNavBar = activity.findViewById(R.id.mobile_shorts_nav_bar);
         if (mShortsNavBar != null) {
+            // Ensure nav bar draws on top of the profile sheet during slide-up animation.
+            mShortsNavBar.bringToFront();
             mShortsNavBar.findViewById(R.id.shorts_nav_home).setOnClickListener(v ->
                     navigateToSection(MediaGroup.TYPE_HOME));
             mShortsNavBar.findViewById(R.id.shorts_nav_shorts).setOnClickListener(v ->
                     navigateToSection(MediaGroup.TYPE_SHORTS));
             mShortsNavBar.findViewById(R.id.shorts_nav_subscriptions).setOnClickListener(v ->
                     navigateToSection(MediaGroup.TYPE_SUBSCRIPTIONS));
-            mShortsNavBar.findViewById(R.id.shorts_nav_you).setOnClickListener(v ->
-                    openShortsProfileSheet());
+            mShortsNavBar.findViewById(R.id.shorts_nav_you).setOnClickListener(v -> {
+                if (mShortsProfileSheet != null
+                        && mShortsProfileSheet.getVisibility() == View.VISIBLE) {
+                    closeShortsProfileSheet();
+                } else {
+                    openShortsProfileSheet();
+                }
+            });
         }
 
         // "You" profile sheet and scrim.
