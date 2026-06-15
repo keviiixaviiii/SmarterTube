@@ -218,8 +218,9 @@ android {
             // 23713 = v0.4.2-beta.1+st31.94 (Gate C: upstream 31.94 sync + Shorts loop fix).
             // 23714 = v0.4.2-beta.2+st31.94 (lockscreen + background audio default).
             // 23715 = v0.4.2-beta.3+st31.94 (subscribe/unsubscribe + notification bell on channel page).
-            versionCode 23716
-            versionName "v0.4.2-beta.4+st31.94"
+            // 23716 = v0.4.2-beta.4+st31.94 (portrait channel tap + like/dislike buttons).
+            versionCode 23717
+            versionName "v0.4.2-beta.5+st31.94"
         }
     }
 }
