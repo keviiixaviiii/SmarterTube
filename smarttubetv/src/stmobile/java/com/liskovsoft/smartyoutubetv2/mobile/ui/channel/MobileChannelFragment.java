@@ -16,9 +16,11 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.app.AlertDialog;
+import com.bumptech.glide.Glide;
 import com.liskovsoft.mediaserviceinterfaces.MediaItemService;
 import java.util.List;
 import com.liskovsoft.mediaserviceinterfaces.ServiceManager;
+import com.liskovsoft.mediaserviceinterfaces.data.MediaItemMetadata;
 import com.liskovsoft.mediaserviceinterfaces.data.NotificationState;
 import com.liskovsoft.sharedutils.helpers.MessageHelpers;
 import com.liskovsoft.sharedutils.rx.RxHelper;
@@ -54,10 +56,14 @@ public class MobileChannelFragment extends Fragment implements ChannelView {
     private boolean mSwipeRefreshing;
     private TextView mSubscribeButton;
     private ImageView mBellButton;
+    private View mHeaderView;
+    private ImageView mAvatarView;
+    private TextView mSubsHeaderView;
     private MediaItemService mItemService;
     private boolean mSubscribed;
     private boolean mSubscriptionResolved;
     private Disposable mSubscribeAction;
+    private Disposable mHeaderAction;
     private List<NotificationState> mNotificationStates;
 
     @Nullable
@@ -77,6 +83,9 @@ public class MobileChannelFragment extends Fragment implements ChannelView {
         mTitleView = view.findViewById(R.id.channel_title);
         mSubscribeButton = view.findViewById(R.id.btn_subscribe);
         mBellButton = (ImageView) view.findViewById(R.id.btn_bell);
+        mHeaderView = view.findViewById(R.id.channel_header);
+        mAvatarView = view.findViewById(R.id.channel_avatar);
+        mSubsHeaderView = view.findViewById(R.id.channel_subs);
 
         view.findViewById(R.id.btn_back).setOnClickListener(v -> {
             if (getActivity() != null) {
@@ -251,22 +260,55 @@ public class MobileChannelFragment extends Fragment implements ChannelView {
         }
 
         mSubscriptionResolved = true;
-        MediaServiceManager.instance().loadMetadata(video, metadata -> {
-            if (!isAdded()) {
-                return;
-            }
-            mSubscribed = metadata.isSubscribed();
-            Video channel = mPresenter != null ? mPresenter.getChannel() : null;
-            if (channel != null) {
-                channel.isSubscribed = mSubscribed;
-            }
-            updateSubscribeButton();
-            List<NotificationState> states = metadata.getNotificationStates();
-            if (states != null && !states.isEmpty()) {
-                mNotificationStates = states;
-            }
-            updateBellButton();
-        });
+
+        // Use an independent subscription on the media service rather than the shared
+        // MediaServiceManager singleton: when this page is opened from an active player (e.g. a
+        // Short), the player's own constant metadata loads dispose the singleton's single in-flight
+        // request, so the header/subscription callback would never arrive.
+        if (mItemService == null) {
+            mItemService = YouTubeServiceManager.instance().getMediaItemService();
+        }
+        if (mItemService == null) {
+            return;
+        }
+
+        RxHelper.disposeActions(mHeaderAction);
+        mHeaderAction = RxHelper.execute(
+                video.mediaItem != null
+                        ? mItemService.getMetadataObserve(video.mediaItem)
+                        : mItemService.getMetadataObserve(video.videoId, video.getPlaylistId(),
+                                video.playlistIndex, video.playlistParams),
+                (MediaItemMetadata metadata) -> {
+                    if (!isAdded() || metadata == null) {
+                        return;
+                    }
+                    mSubscribed = metadata.isSubscribed();
+                    Video channel = mPresenter != null ? mPresenter.getChannel() : null;
+                    if (channel != null) {
+                        channel.isSubscribed = mSubscribed;
+                    }
+                    updateSubscribeButton();
+                    List<NotificationState> states = metadata.getNotificationStates();
+                    if (states != null && !states.isEmpty()) {
+                        mNotificationStates = states;
+                    }
+                    updateBellButton();
+                    bindHeader(metadata.getAuthorImageUrl(), metadata.getSubscriberCount());
+                },
+                error -> {});
+    }
+
+    private void bindHeader(String avatarUrl, String subscriberCount) {
+        boolean hasAvatar = avatarUrl != null && !avatarUrl.isEmpty();
+        boolean hasSubs = subscriberCount != null && !subscriberCount.isEmpty();
+        if (!hasAvatar && !hasSubs) return;
+        if (mAvatarView != null && hasAvatar) {
+            Glide.with(this).load(avatarUrl).circleCrop().into(mAvatarView);
+        }
+        if (mSubsHeaderView != null) {
+            mSubsHeaderView.setText(hasSubs ? subscriberCount : "");
+        }
+        if (mHeaderView != null) mHeaderView.setVisibility(View.VISIBLE);
     }
 
     private static Video firstPlayable(VideoGroup group) {
@@ -284,7 +326,7 @@ public class MobileChannelFragment extends Fragment implements ChannelView {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        RxHelper.disposeActions(mSubscribeAction);
+        RxHelper.disposeActions(mSubscribeAction, mHeaderAction);
         if (mPresenter != null) {
             mPresenter.onViewDestroyed();
         }

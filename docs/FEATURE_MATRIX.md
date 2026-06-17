@@ -15,9 +15,11 @@ Status values:
 > **Unknown blocks a stable (1.0) release** for core user flows. Beta releases may ship with
 > Unknown rows, but they must be listed here honestly rather than assumed to work.
 
-Last reviewed for: `v0.4.2-beta.1+st31.94` (Gate C). Most rows below are carried from prior
-shipped behaviour and **have not been re-verified on a device this cycle** — treat anything not
-explicitly re-tested as provisional and confirm against the release checklist before 1.0.
+Last reviewed for: `v0.4.2-beta.6+st31.94`. The channel-page and player rows touched this cycle
+(channel header, subscribe pill, portrait player avatar + like/dislike) were re-verified on a
+device; other rows are carried from prior shipped behaviour and **have not been re-verified this
+cycle** — treat anything not explicitly re-tested as provisional and confirm against the release
+checklist before 1.0.
 
 ## Browsing & navigation
 
@@ -27,7 +29,7 @@ explicitly re-tested as provisional and confirm against the release checklist be
 | Search (input + suggestions) | Works | |
 | Search results grid | Works | |
 | Voice search | Not implemented | String present, gated unavailable |
-| Channel page (header/tabs) | Works | |
+| Channel page (header/tabs) | Works | Identity header (circular avatar + subscriber count); tabs not yet native |
 | Channel uploads | Works | |
 | Subscriptions feed | Works | Drives upload notifications |
 | History | Unknown | Not re-verified this cycle |
@@ -43,7 +45,7 @@ explicitly re-tested as provisional and confirm against the release checklist be
 | Sign in (OAuth device-code) | Works | |
 | Sign out | Works | |
 | Account switcher | Unknown | Verify if exposed in phone UI |
-| Subscribe / unsubscribe | Unknown | |
+| Subscribe / unsubscribe | Works | Channel-page pill; state resolved from first upload's metadata |
 | Notification bell / inbox | Not implemented | Upstream source was dead; pivoted to subscriptions feed |
 | Upload notifications (push) | Works | Subscriptions-feed poll, shipped 31.93-mobile-1.3 |
 
@@ -52,7 +54,7 @@ explicitly re-tested as provisional and confirm against the release checklist be
 | Feature | Status | Notes |
 |---|---|---|
 | Video playback (landscape) | Works | |
-| Portrait player | Partially works | Shipped 31.93-mobile-1.4; verify controls/comments |
+| Portrait player | Partially works | Channel avatar + tappable channel row; native like/dislike under views; verify comments |
 | In-panel comments (portrait) | Partially works | Read-only; posting is blocked on auth/PoToken |
 | Comments posting | Not implemented | Blocked on innertube auth + PoToken |
 | Shorts playback | Works | TikTok-style UX: swipe pager, tap-to-pause, vertical action rail (like/dislike/comments/channel), auto-hide chrome. VERIFIED-ON-DEVICE Gate B. |

@@ -69,6 +69,40 @@
             android:visibility="gone" />
     </LinearLayout>
 
+    <!--
+        Channel identity header: circular avatar + subscriber count. Hidden until the first
+        upload's metadata resolves (see MobileChannelFragment.maybeResolveSubscribedState).
+    -->
+    <LinearLayout
+        android:id="@+id/channel_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="12dp"
+        android:paddingBottom="12dp"
+        android:visibility="gone">
+
+        <ImageView
+            android:id="@+id/channel_avatar"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:background="@drawable/avatar_circle_bg"
+            android:scaleType="centerCrop"
+            android:contentDescription="@string/channel_avatar" />
+
+        <TextView
+            android:id="@+id/channel_subs"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="16dp"
+            android:textColor="@color/mobile_text_secondary"
+            android:textSize="15sp" />
+    </LinearLayout>
+
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"

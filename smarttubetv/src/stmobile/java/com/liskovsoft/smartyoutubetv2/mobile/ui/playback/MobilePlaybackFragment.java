@@ -24,9 +24,12 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.core.content.ContextCompat;
 
 import com.bumptech.glide.Glide;
+import com.liskovsoft.mediaserviceinterfaces.MediaItemService;
 import com.liskovsoft.mediaserviceinterfaces.data.MediaGroup;
+import com.liskovsoft.mediaserviceinterfaces.data.MediaItemMetadata;
 import com.liskovsoft.mediaserviceinterfaces.oauth.Account;
 import com.liskovsoft.sharedutils.helpers.Helpers;
+import com.liskovsoft.sharedutils.rx.RxHelper;
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.Video;
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.VideoGroup;
 import com.liskovsoft.smartyoutubetv2.common.app.models.playback.controllers.SuggestionsController;
@@ -43,6 +46,8 @@ import com.liskovsoft.youtubeapi.service.YouTubeServiceManager;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import io.reactivex.disposables.Disposable;
 
 /**
  * Phone player fragment: adds the upright/portrait layout on top of the shared
@@ -67,7 +72,6 @@ public class MobilePlaybackFragment extends PlaybackFragment {
     private TextView mChannelView;
     private TextView mSubsView;
     private TextView mViewsView;
-    private TextView mStatsView;
     private RecyclerView mUpNextList;
     private UpNextRowAdapter mUpNextAdapter;
     private boolean mStripMode;
@@ -83,9 +87,15 @@ public class MobilePlaybackFragment extends PlaybackFragment {
     private LinearLayout mShortsInfoBar;
     private TextView mShortsTitleView;
     private TextView mShortsChannelView;
-    // Portrait meta-block like/dislike buttons.
-    private ImageView mPortraitLikeBtn;
-    private ImageView mPortraitDislikeBtn;
+    // Portrait meta-block like/dislike buttons (TextViews showing thumb + count) and channel avatar.
+    private TextView mPortraitLikeBtn;
+    private TextView mPortraitDislikeBtn;
+    private ImageView mPortraitAvatarView;
+    // Independent metadata fetch for the avatar — must NOT use the shared
+    // MediaServiceManager singleton, whose single disposable is constantly disposed by the
+    // player's own metadata loads (which would cancel our avatar request before it resolves).
+    private Disposable mAvatarAction;
+    private String mAvatarVideoId;
 
     // Action rail buttons — resolved lazily from within the included layout.
     private ImageView mShortsLikeBtn;
@@ -149,6 +159,11 @@ public class MobilePlaybackFragment extends PlaybackFragment {
     @Override
     public void onResume() {
         super.onResume();
+        // Returning from another screen (e.g. the channel page opened from a Short) can leave the
+        // Leanback overlay re-shown and the chrome stale. Invalidate the cached layout state so
+        // applyMobileLayout does a full re-apply (ratio + control/decor visibility + chrome)
+        // instead of early-returning because the state looks unchanged.
+        mLayoutState = -1;
         applyMobileLayout();
     }
 
@@ -243,6 +258,7 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         if (!TextUtils.equals(mLastVideoId, video.videoId)) {
             mLastVideoId = video.videoId;
             setDescriptionExpanded(false);
+            loadAvatar(video);
         }
 
         mTitleView.setText(video.getTitle() != null ? video.getTitle() : "");
@@ -252,9 +268,62 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         mChannelView.setText(video.getAuthor() != null ? video.getAuthor() : "");
         mSubsView.setText(video.subscriberCount != null ? video.subscriberCount : "");
         mViewsView.setText(extractViews(video));
-        mStatsView.setText(buildLikes(video));
+        if (mPortraitLikeBtn != null) {
+            mPortraitLikeBtn.setText(video.likeCount != null
+                    ? Helpers.THUMB_UP + " " + video.likeCount : Helpers.THUMB_UP);
+        }
+        if (mPortraitDislikeBtn != null) {
+            mPortraitDislikeBtn.setText(video.dislikeCount != null
+                    ? Helpers.THUMB_DOWN + " " + video.dislikeCount : Helpers.THUMB_DOWN);
+        }
 
         bindShortsChrome(video);
+    }
+
+    /**
+     * Fetch the channel avatar for the portrait meta block. Uses an independent subscription on the
+     * media service so it survives the player's own constant metadata loads (the shared
+     * {@link MediaServiceManager} singleton disposes its single in-flight request on every call).
+     */
+    private void loadAvatar(Video video) {
+        if (video == null || video.videoId == null) {
+            return;
+        }
+
+        // Clear the stale portrait avatar while the new one loads. The Shorts rail channel button
+        // keeps its default icon until the avatar arrives (it's always a visible action button).
+        if (mPortraitAvatarView != null) mPortraitAvatarView.setVisibility(View.GONE);
+        if (mShortsChannelBtn != null) mShortsChannelBtn.setImageResource(R.drawable.ic_shorts_channel);
+        mAvatarVideoId = video.videoId;
+        RxHelper.disposeActions(mAvatarAction);
+
+        MediaItemService itemService = YouTubeServiceManager.instance().getMediaItemService();
+        if (itemService == null) {
+            return;
+        }
+
+        final String fetchId = video.videoId;
+        mAvatarAction = RxHelper.execute(
+                video.mediaItem != null
+                        ? itemService.getMetadataObserve(video.mediaItem)
+                        : itemService.getMetadataObserve(video.videoId, video.getPlaylistId(),
+                                video.playlistIndex, video.playlistParams),
+                (MediaItemMetadata metadata) -> {
+                    if (!isAdded() || !TextUtils.equals(fetchId, mAvatarVideoId)) return;
+                    String url = metadata != null ? metadata.getAuthorImageUrl() : null;
+                    if (url == null || url.isEmpty()) return;
+                    if (mPortraitAvatarView != null) {
+                        Glide.with(MobilePlaybackFragment.this).load(url).circleCrop()
+                                .into(mPortraitAvatarView);
+                        mPortraitAvatarView.setVisibility(View.VISIBLE);
+                    }
+                    if (mShortsChannelBtn != null) {
+                        // The Shorts rail channel button doubles as the channel avatar.
+                        Glide.with(MobilePlaybackFragment.this).load(url).circleCrop()
+                                .into(mShortsChannelBtn);
+                    }
+                },
+                error -> {});
     }
 
     private void bindShortsChrome(Video video) {
@@ -278,8 +347,12 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         boolean disliked = getButtonState(R.id.action_thumbs_down) == PlayerUI.BUTTON_ON;
         if (mShortsLikeBtn    != null) tintRailButton(mShortsLikeBtn,    liked);
         if (mShortsDislikeBtn != null) tintRailButton(mShortsDislikeBtn, disliked);
-        if (mPortraitLikeBtn    != null) tintRailButton(mPortraitLikeBtn,    liked);
-        if (mPortraitDislikeBtn != null) tintRailButton(mPortraitDislikeBtn, disliked);
+        tintPortraitButton(mPortraitLikeBtn,    liked);
+        tintPortraitButton(mPortraitDislikeBtn, disliked);
+    }
+
+    private void tintPortraitButton(TextView btn, boolean active) {
+        if (btn != null) btn.setTextColor(active ? SHORTS_ACTIVE_TINT : 0xFFAAAAAA);
     }
 
     private void tintRailButton(ImageView btn, boolean active) {
@@ -301,10 +374,10 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         boolean active = buttonState == PlayerUI.BUTTON_ON;
         if (buttonId == R.id.action_thumbs_up) {
             if (mShortsLikeBtn    != null) tintRailButton(mShortsLikeBtn,    active);
-            if (mPortraitLikeBtn  != null) tintRailButton(mPortraitLikeBtn,  active);
+            tintPortraitButton(mPortraitLikeBtn, active);
         } else if (buttonId == R.id.action_thumbs_down) {
             if (mShortsDislikeBtn    != null) tintRailButton(mShortsDislikeBtn,    active);
-            if (mPortraitDislikeBtn  != null) tintRailButton(mPortraitDislikeBtn,  active);
+            tintPortraitButton(mPortraitDislikeBtn, active);
         }
     }
 
@@ -321,18 +394,6 @@ public class MobilePlaybackFragment extends PlaybackFragment {
             }
         }
         return "";
-    }
-
-    /** "👍 1.1K • 👎 13" (whatever is available). */
-    private CharSequence buildLikes(Video video) {
-        List<String> parts = new ArrayList<>();
-        if (video.likeCount != null) {
-            parts.add(Helpers.THUMB_UP + " " + video.likeCount);
-        }
-        if (video.dislikeCount != null) {
-            parts.add(Helpers.THUMB_DOWN + " " + video.dislikeCount);
-        }
-        return TextUtils.join(" " + Video.TERTIARY_TEXT_DELIM + " ", parts);
     }
 
     private void setDescriptionExpanded(boolean expanded) {
@@ -1042,7 +1103,6 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         mChannelView = activity.findViewById(R.id.mobile_video_channel);
         mSubsView = activity.findViewById(R.id.mobile_video_subs);
         mViewsView = activity.findViewById(R.id.mobile_video_views);
-        mStatsView = activity.findViewById(R.id.mobile_video_stats);
         mUpNextList = activity.findViewById(R.id.mobile_up_next_list);
 
         if (mPanel == null || mRoot == null) {
@@ -1070,6 +1130,7 @@ public class MobilePlaybackFragment extends PlaybackFragment {
             });
         }
 
+        mPortraitAvatarView = activity.findViewById(R.id.mobile_video_channel_avatar);
         mPortraitLikeBtn = activity.findViewById(R.id.mobile_video_like_btn);
         mPortraitDislikeBtn = activity.findViewById(R.id.mobile_video_dislike_btn);
         if (mPortraitLikeBtn != null) {
