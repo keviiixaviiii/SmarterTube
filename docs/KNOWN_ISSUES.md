@@ -60,10 +60,17 @@ are **VERIFIED-ON-DEVICE**. Remaining items:
   the content tabs; the native channel page does not surface them yet.
 - **Channels list shows stale content after Back (pre-existing).** Backing out of a channel into
   the subscriptions "Channels" list shows the previous channel's content until pull-to-refresh.
-  Root cause is in shared (`common`) navigation/view-state, not the tabs view. Tracked separately.
-- **Player ↔ channel Back loop + lingering audio (pre-existing).** Pressing Back during playback
-  opens the channel page with audio still playing; Back on the channel page returns to the player.
-  Root cause is the shared `ViewManager` parent-view chain + background playback. Tracked separately.
+  Root cause is in shared (`common`) navigation/view-state, not the tabs view. Tracked in
+  [#22](https://github.com/CodeSculptor/SmarterTube/issues/22).
+
+## Player
+
+- **Back stops the video and leaves** (phone UX). With background audio on (the default), the
+  shared player otherwise kept the engine alive on Back and navigated to the channel, leaving
+  audio playing and looping Back between player and channel ([#23], fixed). Home / lock-screen
+  background audio is unchanged; PIP mode still enters PIP on Back.
+
+[#23]: https://github.com/CodeSculptor/SmarterTube/issues/23
 
 ## Updater notes
 

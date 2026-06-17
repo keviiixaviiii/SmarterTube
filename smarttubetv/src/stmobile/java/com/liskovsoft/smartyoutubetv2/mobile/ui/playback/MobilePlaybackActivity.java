@@ -9,6 +9,7 @@ import androidx.fragment.app.Fragment;
 
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.Video;
 import com.liskovsoft.smartyoutubetv2.common.app.presenters.PlaybackPresenter;
+import com.liskovsoft.smartyoutubetv2.common.prefs.PlayerData;
 import com.liskovsoft.smartyoutubetv2.tv.R;
 import com.liskovsoft.smartyoutubetv2.tv.ui.playback.PlaybackActivity;
 
@@ -45,6 +46,33 @@ public class MobilePlaybackActivity extends PlaybackActivity {
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         applyOrientationForCurrentVideo();
+    }
+
+    /**
+     * Phone Back UX (issue #23): pressing Back leaves the video for good.
+     *
+     * The shared {@link PlaybackActivity#finish()} keeps the player engine alive on Back when
+     * background audio is on (the phone default, {@code BACKGROUND_MODE_SOUND}) and navigates to
+     * the player's "parent view". That left audio playing after Back and parked a still-running
+     * player activity beneath the channel page — pressing Back on the channel then revealed the
+     * live player again, a channel↔player loop. Here we instead stop playback and finish the
+     * player ({@link #finishReally()}), so Back drops back to the previous screen with no lingering
+     * audio and nothing to loop into.
+     *
+     * Left to the base class:
+     * - PIP (either already in PIP, or the user picked {@code BACKGROUND_MODE_PIP}) — Back should
+     *   enter/keep PIP, an explicit opt-in feature, not be hijacked into a stop.
+     * - Home / lock-screen background audio — that runs through onUserLeaveHint/onStop, a different
+     *   path that this override doesn't touch, so listening with the screen off still works.
+     */
+    @Override
+    public void onBackPressed() {
+        if (isInPipMode() || getPlayerData().getBackgroundMode() == PlayerData.BACKGROUND_MODE_PIP) {
+            super.onBackPressed();
+            return;
+        }
+
+        finishReally();
     }
 
     @Override
