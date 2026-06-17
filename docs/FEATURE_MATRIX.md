@@ -16,10 +16,10 @@ Status values:
 > Unknown rows, but they must be listed here honestly rather than assumed to work.
 
 Last reviewed for: `v0.4.2-beta.6+st31.94`. The channel-page and player rows touched this cycle
-(channel header, subscribe pill, portrait player avatar + like/dislike) were re-verified on a
-device; other rows are carried from prior shipped behaviour and **have not been re-verified this
-cycle** — treat anything not explicitly re-tested as provisional and confirm against the release
-checklist before 1.0.
+(channel header, subscribe pill, portrait player avatar + like/dislike, and native channel
+content tabs) were re-verified on a device; other rows are carried from prior shipped behaviour
+and **have not been re-verified this cycle** — treat anything not explicitly re-tested as
+provisional and confirm against the release checklist before 1.0.
 
 ## Browsing & navigation
 
@@ -29,7 +29,7 @@ checklist before 1.0.
 | Search (input + suggestions) | Works | |
 | Search results grid | Works | |
 | Voice search | Not implemented | String present, gated unavailable |
-| Channel page (header/tabs) | Works | Identity header (circular avatar + subscriber count); tabs not yet native |
+| Channel page (header/tabs) | Works | Identity header (circular avatar + subscriber count); native content tabs (Videos / Shorts / Live / Playlists, one swipeable 2-column grid per group) |
 | Channel uploads | Works | |
 | Subscriptions feed | Works | Drives upload notifications |
 | History | Unknown | Not re-verified this cycle |

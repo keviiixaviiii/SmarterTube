@@ -48,6 +48,23 @@ Current release: `v0.4.2-beta.6+st31.94`  ·  Upstream SmartTube base: `31.94`  
   loop. Fixed in stmobile by covering the seek with the current video's thumbnail poster.
   **VERIFIED-ON-DEVICE Gate C.** No remaining Shorts-specific issues.
 
+## Channel page (native content tabs)
+
+Native content tabs (Videos / Shorts / Live / Playlists — one swipeable 2-column grid per group)
+are **VERIFIED-ON-DEVICE**. Remaining items:
+
+- **Shorts / Playlists cards render with the landscape video-card layout.** Shorts are portrait
+  and playlist cards differ, but every tab reuses the standard 16:9 card for now. Cosmetic; a
+  per-card-type layout is a later refinement.
+- **Sort chips (Latest / Popular / Oldest) are not wired.** Upstream exposes them separately from
+  the content tabs; the native channel page does not surface them yet.
+- **Channels list shows stale content after Back (pre-existing).** Backing out of a channel into
+  the subscriptions "Channels" list shows the previous channel's content until pull-to-refresh.
+  Root cause is in shared (`common`) navigation/view-state, not the tabs view. Tracked separately.
+- **Player ↔ channel Back loop + lingering audio (pre-existing).** Pressing Back during playback
+  opens the channel page with audio still playing; Back on the channel page returns to the player.
+  Root cause is the shared `ViewManager` parent-view chain + background playback. Tracked separately.
+
 ## Updater notes
 
 - The phone "Check for updates" reads the fork's GitHub releases. Its manifest URL / release

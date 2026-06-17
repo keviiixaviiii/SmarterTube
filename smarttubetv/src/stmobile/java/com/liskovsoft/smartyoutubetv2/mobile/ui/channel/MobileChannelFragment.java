@@ -11,12 +11,14 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+import androidx.viewpager2.widget.ViewPager2;
 
 import android.app.AlertDialog;
 import com.bumptech.glide.Glide;
+import com.google.android.material.tabs.TabLayout;
+import com.google.android.material.tabs.TabLayoutMediator;
 import com.liskovsoft.mediaserviceinterfaces.MediaItemService;
 import java.util.List;
 import com.liskovsoft.mediaserviceinterfaces.ServiceManager;
@@ -29,7 +31,6 @@ import com.liskovsoft.smartyoutubetv2.common.app.models.data.VideoGroup;
 import com.liskovsoft.smartyoutubetv2.common.app.presenters.ChannelPresenter;
 import com.liskovsoft.smartyoutubetv2.common.app.views.ChannelView;
 import com.liskovsoft.smartyoutubetv2.common.misc.MediaServiceManager;
-import com.liskovsoft.smartyoutubetv2.mobile.ui.browse.ShelfAdapter;
 import com.liskovsoft.smartyoutubetv2.mobile.ui.browse.VideoCardAdapter;
 import com.liskovsoft.smartyoutubetv2.tv.R;
 import com.liskovsoft.youtubeapi.service.YouTubeServiceManager;
@@ -40,19 +41,22 @@ import io.reactivex.disposables.Disposable;
 /**
  * Native portrait Channel screen. Implements {@link ChannelView} and is driven by the
  * existing {@link ChannelPresenter} unchanged — group loading, video clicks, sort options
- * and the menu dialog all flow through the presenter. The view layer reuses the Home
- * shelves ({@link ShelfAdapter}) — a channel is just a stack of titled shelves.
+ * and the menu dialog all flow through the presenter.
  *
- * Horizontal-shelf pagination is deferred (the Home shelves don't paginate either).
+ * Each content group the presenter emits (Videos / Shorts / Live / Playlists …) becomes a
+ * tab: a {@link ViewPager2} page showing that group as a 2-column grid, with a Material
+ * {@link TabLayout} strip linked by {@link TabLayoutMediator}. Per-tab pagination routes
+ * back through {@code presenter.onScrollEnd}; see {@link ChannelTabsAdapter}.
  */
 public class MobileChannelFragment extends Fragment implements ChannelView {
     private ChannelPresenter mPresenter;
-    private RecyclerView mList;
+    private ViewPager2 mPager;
+    private TabLayout mTabs;
+    private TabLayoutMediator mTabsMediator;
     private SwipeRefreshLayout mSwipeRefresh;
     private ProgressBar mProgressBar;
     private TextView mTitleView;
-    private ShelfAdapter mShelfAdapter;
-    private int mShelfCardWidth;
+    private ChannelTabsAdapter mTabsAdapter;
     private boolean mSwipeRefreshing;
     private TextView mSubscribeButton;
     private ImageView mBellButton;
@@ -77,7 +81,8 @@ public class MobileChannelFragment extends Fragment implements ChannelView {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        mList = view.findViewById(R.id.channel_list);
+        mPager = view.findViewById(R.id.channel_pager);
+        mTabs = view.findViewById(R.id.channel_tabs);
         mSwipeRefresh = view.findViewById(R.id.swipe_refresh);
         mProgressBar = view.findViewById(R.id.progress_bar);
         mTitleView = view.findViewById(R.id.channel_title);
@@ -93,18 +98,51 @@ public class MobileChannelFragment extends Fragment implements ChannelView {
             }
         });
 
-        mShelfCardWidth = (int) (getResources().getDisplayMetrics().widthPixels * 0.42f);
-        mShelfAdapter = new ShelfAdapter(mShelfCardWidth, mVideoClick, mVideoLongClick,
+        int span = getResources().getInteger(R.integer.mobile_grid_span);
+        int cardWidth = getResources().getDisplayMetrics().widthPixels / span;
+        mTabsAdapter = new ChannelTabsAdapter(cardWidth, span, mVideoClick, mVideoLongClick,
                 last -> {
                     if (mPresenter != null && last != null) {
                         mPresenter.onScrollEnd(last);
                     }
                 });
-        mList.setLayoutManager(new LinearLayoutManager(getContext()));
-        mList.setAdapter(mShelfAdapter);
+        mPager.setAdapter(mTabsAdapter);
+
+        // TabLayoutMediator observes the adapter, so tabs appear as the presenter emits
+        // groups. Show the strip only once there's more than one tab.
+        mTabsMediator = new TabLayoutMediator(mTabs, mPager,
+                (tab, position) -> tab.setText(mTabsAdapter.getTitle(position)));
+        mTabsMediator.attach();
+        mTabsAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
+            @Override
+            public void onChanged() {
+                updateTabStripVisibility();
+            }
+
+            @Override
+            public void onItemRangeInserted(int positionStart, int itemCount) {
+                updateTabStripVisibility();
+            }
+        });
 
         mSwipeRefresh.setColorSchemeResources(R.color.brand_accent);
         mSwipeRefresh.setProgressBackgroundColorSchemeResource(R.color.mobile_surface);
+        // Each page hosts a vertically-scrolling grid inside a horizontally-paging
+        // ViewPager2; only let pull-to-refresh fire when the active grid is at the top.
+        mSwipeRefresh.setOnChildScrollUpCallback((parent, child) -> {
+            RecyclerView grid = currentPageGrid();
+            return grid != null && grid.canScrollVertically(-1);
+        });
+        // SwipeRefreshLayout otherwise steals the horizontal drag and cancels the page
+        // swipe (it only completes on a fast fling). Disable the refresh gesture while the
+        // pager is dragging/settling so a slow swipe between tabs is honoured, then re-enable
+        // it when the pager is idle so pull-to-refresh keeps working.
+        mPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+            @Override
+            public void onPageScrollStateChanged(int state) {
+                mSwipeRefresh.setEnabled(state == ViewPager2.SCROLL_STATE_IDLE);
+            }
+        });
         mSwipeRefresh.setOnRefreshListener(() -> {
             // ChannelPresenter has no public refresh(); openChannel(id) is the reload path
             // (clears the view and re-fetches the channel rows).
@@ -326,39 +364,60 @@ public class MobileChannelFragment extends Fragment implements ChannelView {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        if (mTabsMediator != null) {
+            mTabsMediator.detach();
+        }
         RxHelper.disposeActions(mSubscribeAction, mHeaderAction);
         if (mPresenter != null) {
             mPresenter.onViewDestroyed();
         }
     }
 
+    private void updateTabStripVisibility() {
+        if (mTabs != null && mTabsAdapter != null) {
+            mTabs.setVisibility(mTabsAdapter.getItemCount() > 1 ? View.VISIBLE : View.GONE);
+        }
+    }
+
+    /** The grid {@link RecyclerView} of the page currently shown by the pager, or null. */
+    private RecyclerView currentPageGrid() {
+        if (mPager == null || !(mPager.getChildAt(0) instanceof RecyclerView)) {
+            return null;
+        }
+        RecyclerView inner = (RecyclerView) mPager.getChildAt(0);
+        RecyclerView.ViewHolder holder = inner.findViewHolderForAdapterPosition(mPager.getCurrentItem());
+        return holder != null && holder.itemView instanceof RecyclerView
+                ? (RecyclerView) holder.itemView : null;
+    }
+
     // ----- ChannelView -----
 
     @Override
     public void update(VideoGroup group) {
-        if (group == null || mShelfAdapter == null) {
+        if (group == null || mTabsAdapter == null) {
             return;
         }
         switch (group.getAction()) {
             case VideoGroup.ACTION_REPLACE:
-                // Some flows (sort change, in-channel search) emit a replace; wipe shelves
-                // before appending. A "replace" carrying a single group ends up as one shelf.
-                mShelfAdapter.clear();
+                // Some flows (sort change, in-channel search) emit a replace; wipe the tabs
+                // before appending. A "replace" carrying a single group ends up as one tab.
+                mTabsAdapter.clear();
                 if (!group.isEmpty()) {
-                    mShelfAdapter.appendGroup(group);
+                    mTabsAdapter.appendGroup(group);
                     maybeResolveSubscribedState(group);
                 }
                 break;
             case VideoGroup.ACTION_REMOVE:
             case VideoGroup.ACTION_REMOVE_AUTHOR:
-                mShelfAdapter.removeVideos(group.getVideos());
+                mTabsAdapter.removeVideos(group.getVideos());
                 break;
             case VideoGroup.ACTION_SYNC:
                 // Percent-watched markers only; not rendered natively yet.
                 break;
-            default: // ACTION_APPEND / ACTION_PREPEND
+            default: // ACTION_APPEND / ACTION_PREPEND — a new group is a new tab, a
+                     // continuation appends to its existing page.
                 if (!group.isEmpty()) {
-                    mShelfAdapter.appendGroup(group);
+                    mTabsAdapter.appendGroup(group);
                     maybeResolveSubscribedState(group);
                 }
                 break;
@@ -392,8 +451,8 @@ public class MobileChannelFragment extends Fragment implements ChannelView {
 
     @Override
     public void clear() {
-        if (mShelfAdapter != null) {
-            mShelfAdapter.clear();
+        if (mTabsAdapter != null) {
+            mTabsAdapter.clear();
         }
     }
 

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    One ViewPager2 page on the phone Channel screen: a single content group (Videos /
+    Shorts / Live / Playlists …) shown as a 2-column grid that paginates as the user
+    scrolls toward the bottom. Root must fill the pager (match_parent) — ViewPager2
+    requires each page to fill it.
+-->
+<androidx.recyclerview.widget.RecyclerView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/tab_grid"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clipToPadding="false"
+    android:paddingBottom="16dp" />

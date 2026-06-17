@@ -313,6 +313,12 @@ dependencies {
     // constant) because constants.gradle lives in the SharedModules submodule, which
     // the fork must not edit. 1.1.0 is the stable release, compatible with appcompat 1.2.0.
     stmobileImplementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
+    // Native channel tabs: Material TabLayout for the tab strip + ViewPager2 for swipeable
+    // pages. materialVersion (1.5.0) and viewpagerXVersion (1.0.0) already live in
+    // SharedModules/constants.gradle (referenced like appCompatXVersion above), so this only
+    // adds the artifacts to the stmobile flavor classpath — no submodule edit, no version drift.
+    stmobileImplementation 'com.google.android.material:material:' + materialVersion
+    stmobileImplementation 'androidx.viewpager2:viewpager2:' + viewpagerXVersion
     // okhttp on the compile classpath so the phone About screen's update check can reuse
     // the app's shared OkHttpManager client (its doGetRequest returns okhttp3.Response).
     // Same version sharedutils already pulls in at runtime (root build.gradle force-resolves

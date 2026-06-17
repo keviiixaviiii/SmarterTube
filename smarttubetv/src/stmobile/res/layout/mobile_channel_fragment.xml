@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    Phone Channel screen. Toolbar with back + channel title, then a vertical list of
-    horizontally-scrolling shelves (one per VideoGroup the presenter emits).
+    Phone Channel screen. Toolbar with back + channel title, a channel-identity header,
+    then a Material tab strip whose tabs are the channel's content groups (Videos / Shorts /
+    Live / Playlists …) — each a swipeable ViewPager2 page showing that group as a grid.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -103,6 +104,23 @@
             android:textSize="15sp" />
     </LinearLayout>
 
+    <!--
+        Content-group tab strip. Populated dynamically as the presenter emits groups
+        (one tab per group, via TabLayoutMediator). Hidden until there's more than one
+        tab — a single-group channel needs no strip.
+    -->
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/channel_tabs"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/mobile_primary"
+        android:visibility="gone"
+        app:tabMode="scrollable"
+        app:tabGravity="start"
+        app:tabIndicatorColor="@color/brand_accent"
+        app:tabSelectedTextColor="@color/brand_accent"
+        app:tabTextColor="@color/mobile_text_secondary" />
+
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -113,12 +131,10 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/channel_list"
+            <androidx.viewpager2.widget.ViewPager2
+                android:id="@+id/channel_pager"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:clipToPadding="false"
-                android:paddingBottom="16dp" />
+                android:layout_height="match_parent" />
         </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
         <ProgressBar
