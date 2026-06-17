@@ -551,10 +551,20 @@ public class MobileBrowseFragment extends Fragment implements BrowseView, MediaS
     }
 
     private final VideoCardAdapter.OnVideoAction mVideoClick = video -> {
-        if (mPresenter != null) {
-            mPresenter.onVideoItemSelected(video);
-            mPresenter.onVideoItemClicked(video);
+        if (mPresenter == null) {
+            return;
         }
+        // On the "Channels" multi-grid section, onVideoItemSelected mirrors the TV
+        // two-pane behavior: it replaces the grid with the tapped channel's uploads
+        // (meant for the TV's right-hand pane). The phone has a single grid, so that
+        // silently overwrites the channel list — and it stays overwritten after returning
+        // from the channel page until a manual pull-to-refresh. Skip the selection step
+        // here; onVideoItemClicked still opens the channel page. Every other section keeps
+        // onVideoItemSelected so scroll-position memory works.
+        if (!mPresenter.isMultiGridChannelUploadsSection()) {
+            mPresenter.onVideoItemSelected(video);
+        }
+        mPresenter.onVideoItemClicked(video);
     };
 
     private final VideoCardAdapter.OnVideoAction mVideoLongClick = video -> {
