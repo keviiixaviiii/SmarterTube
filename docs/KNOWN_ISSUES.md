@@ -41,9 +41,11 @@ Reworked for touch ([#26], verified on device — Player, General, Auto Frame Ra
 - **Numeric ranges** (playback speed, video zoom, seek interval, volume, auto-hide timeout) use an
   inline slider over the option list. The slider only drags from its thumb, so scrolling the list
   past a slider does not change its value.
-- Checkbox/switch rows are unchanged.
-
-Remaining (optional, Phase C): grouping/sectioning the long checkbox-heavy screens for scannability.
+- **Checkbox-heavy screens** (e.g. General) group each category under a collapsible section header.
+  On long screens (3+ sections) the sections start collapsed — a folded checkbox section shows an
+  "N ON" count — so the whole screen can be scanned at a glance; tap a header to expand its rows.
+  Short screens stay expanded. (Phase C, verified on device.)
+- Switch rows are unchanged.
 
 [#26]: https://github.com/CodeSculptor/SmarterTube/issues/26
 

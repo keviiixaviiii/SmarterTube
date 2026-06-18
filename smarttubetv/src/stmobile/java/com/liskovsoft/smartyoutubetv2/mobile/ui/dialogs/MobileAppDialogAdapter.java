@@ -22,7 +22,9 @@ import com.liskovsoft.smartyoutubetv2.tv.R;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Flat list of section headers + option rows, built from a list of
@@ -46,7 +48,15 @@ class MobileAppDialogAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         void onSelected();
     }
 
+    /** A long screen (this many collapsible sections or more) starts collapsed for scannability. */
+    private static final int COLLAPSE_DEFAULT_THRESHOLD = 3;
+
     private final List<Row> mRows = new ArrayList<>();
+    // Per-category accordion state, keyed by title. Survives the row rebuild that happens on every
+    // re-render (option taps, presenter re-show), so a section the user expanded stays expanded.
+    private final Map<String, Boolean> mExpandedByTitle = new HashMap<>();
+    private List<OptionCategory> mCategories;
+    private boolean mIsExpandable;
     private OnSelectListener mOnSelect;
 
     void setOnSelectListener(OnSelectListener listener) {
@@ -54,22 +64,32 @@ class MobileAppDialogAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     }
 
     void setCategories(List<OptionCategory> categories, boolean isExpandable) {
+        mCategories = categories;
+        mIsExpandable = isExpandable;
+        rebuild();
+    }
+
+    private void rebuild() {
         mRows.clear();
-        if (categories == null) {
+        if (mCategories == null) {
             notifyDataSetChanged();
             return;
         }
         // Suppress the category-header row when it would be redundant with the dialog
         // title (expandable single category — the fragment already shows category.title up
         // top, see MobileAppDialogFragment#show).
-        boolean suppressHeaders = isExpandable && categories.size() == 1;
-        for (OptionCategory category : categories) {
+        boolean suppressHeaders = mIsExpandable && mCategories.size() == 1;
+        // Long screens (many sections) open collapsed so the user can scan all section titles
+        // first; short screens stay expanded so there's no needless extra tap. A section the user
+        // has explicitly toggled (mExpandedByTitle) always wins over this default.
+        boolean defaultCollapsed = countSections(suppressHeaders) >= COLLAPSE_DEFAULT_THRESHOLD;
+        for (OptionCategory category : mCategories) {
             if (category.options == null || category.options.isEmpty()) {
                 continue;
             }
             // A radio category whose options form an ordered numeric range (speed, zoom, seek
             // interval, auto-hide timeout) renders as a discrete slider over the option list.
-            if (shouldSlider(category, suppressHeaders)) {
+            if (shouldSlider(category)) {
                 mRows.add(Row.slider(category));
                 continue;
             }
@@ -81,20 +101,51 @@ class MobileAppDialogAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                 mRows.add(Row.value(category));
                 continue;
             }
-            if (!suppressHeaders && !TextUtils.isEmpty(category.title)
-                    && category.type != OptionCategory.TYPE_SINGLE_SWITCH
-                    && category.type != OptionCategory.TYPE_SINGLE_BUTTON) {
-                mRows.add(Row.header(category.title));
+            boolean hasHeader = hasHeader(category, suppressHeaders);
+            boolean expanded = !hasHeader || isExpanded(category.title, defaultCollapsed);
+            if (hasHeader) {
+                mRows.add(Row.header(category, expanded));
             }
-            for (OptionItem item : category.options) {
-                if (category.type == OptionCategory.TYPE_LONG_TEXT) {
-                    mRows.add(Row.longText(item));
-                } else {
-                    mRows.add(Row.option(category, item));
+            if (expanded) {
+                for (OptionItem item : category.options) {
+                    if (category.type == OptionCategory.TYPE_LONG_TEXT) {
+                        mRows.add(Row.longText(item));
+                    } else {
+                        mRows.add(Row.option(category, item));
+                    }
                 }
             }
         }
         notifyDataSetChanged();
+    }
+
+    /** Number of categories that render as a collapsible section header on this screen. */
+    private int countSections(boolean suppressHeaders) {
+        int sections = 0;
+        for (OptionCategory category : mCategories) {
+            if (category.options == null || category.options.isEmpty()
+                    || shouldSlider(category)
+                    || shouldCollapse(category, suppressHeaders)) {
+                continue;
+            }
+            if (hasHeader(category, suppressHeaders)) {
+                sections++;
+            }
+        }
+        return sections;
+    }
+
+    private boolean isExpanded(CharSequence title, boolean defaultCollapsed) {
+        Boolean override = mExpandedByTitle.get(String.valueOf(title));
+        return override != null ? override : !defaultCollapsed;
+    }
+
+    /** Whether a category renders a section header (the rows below it form a collapsible group). */
+    private static boolean hasHeader(OptionCategory category, boolean suppressHeaders) {
+        return !suppressHeaders
+                && !TextUtils.isEmpty(category.title)
+                && category.type != OptionCategory.TYPE_SINGLE_SWITCH
+                && category.type != OptionCategory.TYPE_SINGLE_BUTTON;
     }
 
     @Override
@@ -142,7 +193,7 @@ class MobileAppDialogAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         Row row = mRows.get(position);
         if (holder instanceof HeaderHolder) {
-            ((HeaderHolder) holder).title.setText(row.title);
+            bindHeader((HeaderHolder) holder, row);
         } else if (holder instanceof LongTextHolder) {
             CharSequence body = row.item.getDescription();
             if (TextUtils.isEmpty(body)) {
@@ -156,6 +207,51 @@ class MobileAppDialogAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         } else if (holder instanceof OptionHolder) {
             bindOption((OptionHolder) holder, row);
         }
+    }
+
+    private void bindHeader(HeaderHolder h, Row row) {
+        final OptionCategory category = row.category;
+        h.title.setText(category != null ? category.title : row.title);
+
+        // Summary only matters while collapsed (when expanded the rows themselves are visible).
+        // For a checkbox section show how many toggles are on, so the folded header still conveys
+        // its state at a glance.
+        String summary = !row.expanded ? sectionSummary(category) : null;
+        if (TextUtils.isEmpty(summary)) {
+            h.summary.setVisibility(View.GONE);
+        } else {
+            h.summary.setVisibility(View.VISIBLE);
+            h.summary.setText(summary);
+        }
+
+        // "›" points right when collapsed, rotates down when expanded.
+        h.chevron.setRotation(row.expanded ? 90f : 0f);
+
+        if (category != null) {
+            h.itemView.setClickable(true);
+            h.itemView.setOnClickListener(v -> {
+                mExpandedByTitle.put(String.valueOf(category.title), !row.expanded);
+                rebuild();
+            });
+        } else {
+            h.itemView.setOnClickListener(null);
+            h.itemView.setClickable(false);
+        }
+    }
+
+    /** Count-of-selected summary for a folded checkbox section, e.g. "2 ON"; null otherwise. */
+    private static String sectionSummary(OptionCategory category) {
+        if (category == null || category.type != OptionCategory.TYPE_CHECKBOX_LIST
+                || category.options == null) {
+            return null;
+        }
+        int on = 0;
+        for (OptionItem option : category.options) {
+            if (option.isSelected()) {
+                on++;
+            }
+        }
+        return on > 0 ? on + " ON" : null;
     }
 
     private void bindValue(ValueHolder h, Row row) {
@@ -331,13 +427,19 @@ class MobileAppDialogAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     }
 
     /**
-     * Whether a collapsible radio category is an ordered numeric range (speed, zoom, seek
-     * interval, auto-hide timeout) and should be a discrete slider instead of a picker. Detected
-     * from the option labels — a strong majority must contain a number (a few word labels like
-     * "Never" / "Default" at the ends are fine).
+     * Whether a radio category is an ordered numeric range (speed, zoom, seek interval, auto-hide
+     * timeout) and should be a discrete slider. Detected from the option labels — a strong majority
+     * must contain a number (a few word labels like "Never" / "Default" at the ends are fine).
+     *
+     * Unlike the value/picker collapse this is NOT gated on {@code suppressHeaders}: a slider is a
+     * self-contained inline control with no recursion risk, so a lone expandable numeric category
+     * (e.g. the Video speed sub-dialog opened from the landscape player) renders as a slider too,
+     * staying consistent with the same range shown on multi-category settings screens.
      */
-    private static boolean shouldSlider(OptionCategory category, boolean suppressHeaders) {
-        if (!shouldCollapse(category, suppressHeaders) || category.options.size() < 3) {
+    private static boolean shouldSlider(OptionCategory category) {
+        if (category.type != OptionCategory.TYPE_RADIO_LIST
+                || category.options == null || category.options.size() < 3
+                || selectedOf(category) == null) {
             return false;
         }
         int numeric = 0;
@@ -376,9 +478,13 @@ class MobileAppDialogAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
     static class HeaderHolder extends RecyclerView.ViewHolder {
         final TextView title;
+        final TextView summary;
+        final TextView chevron;
         HeaderHolder(View v) {
             super(v);
             title = v.findViewById(R.id.category_title);
+            summary = v.findViewById(R.id.category_summary);
+            chevron = v.findViewById(R.id.category_chevron);
         }
     }
 
@@ -439,35 +545,37 @@ class MobileAppDialogAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         final int categoryType;
         final List<OptionItem> siblings;
         final OptionCategory category;
+        final boolean expanded; // HEADER rows only: accordion open/closed state
 
-        private Row(Kind kind, CharSequence title, OptionItem item,
-                    int categoryType, List<OptionItem> siblings, OptionCategory category) {
+        private Row(Kind kind, CharSequence title, OptionItem item, int categoryType,
+                    List<OptionItem> siblings, OptionCategory category, boolean expanded) {
             this.kind = kind;
             this.title = title;
             this.item = item;
             this.categoryType = categoryType;
             this.siblings = siblings;
             this.category = category;
+            this.expanded = expanded;
         }
 
-        static Row header(CharSequence title) {
-            return new Row(Kind.HEADER, title, null, -1, null, null);
+        static Row header(OptionCategory category, boolean expanded) {
+            return new Row(Kind.HEADER, category.title, null, category.type, null, category, expanded);
         }
 
         static Row option(OptionCategory category, OptionItem item) {
-            return new Row(Kind.OPTION, null, item, category.type, category.options, null);
+            return new Row(Kind.OPTION, null, item, category.type, category.options, null, false);
         }
 
         static Row longText(OptionItem item) {
-            return new Row(Kind.LONG_TEXT, null, item, OptionCategory.TYPE_LONG_TEXT, null, null);
+            return new Row(Kind.LONG_TEXT, null, item, OptionCategory.TYPE_LONG_TEXT, null, null, false);
         }
 
         static Row value(OptionCategory category) {
-            return new Row(Kind.VALUE, null, null, category.type, category.options, category);
+            return new Row(Kind.VALUE, null, null, category.type, category.options, category, false);
         }
 
         static Row slider(OptionCategory category) {
-            return new Row(Kind.SLIDER, null, null, category.type, category.options, category);
+            return new Row(Kind.SLIDER, null, null, category.type, category.options, category, false);
         }
     }
 }

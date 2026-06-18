@@ -1,13 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
-<TextView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/category_title"
+<!-- Section header for a settings category. On long multi-section screens the header acts as a
+     collapsible accordion: tapping it folds the category's rows away (chevron + an "N ON" summary
+     for checkbox sections) so the whole screen can be scanned at a glance. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:minHeight="48dp"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
     android:paddingStart="20dp"
     android:paddingEnd="20dp"
-    android:paddingTop="20dp"
+    android:paddingTop="16dp"
     android:paddingBottom="8dp"
-    android:textColor="@color/mobile_accent"
-    android:textSize="13sp"
-    android:textAllCaps="true"
-    android:textStyle="bold" />
+    android:background="?android:attr/selectableItemBackground">
+
+    <TextView
+        android:id="@+id/category_title"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:textColor="@color/mobile_accent"
+        android:textSize="13sp"
+        android:textAllCaps="true"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/category_summary"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:maxLines="1"
+        android:textColor="@color/mobile_text_secondary"
+        android:textSize="12sp" />
+
+    <TextView
+        android:id="@+id/category_chevron"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:text="›"
+        android:textColor="@color/mobile_text_secondary"
+        android:textSize="20sp" />
+</LinearLayout>
