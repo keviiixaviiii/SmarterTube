@@ -223,8 +223,11 @@ android {
             // 23718 = v0.4.2-beta.6+st31.94 (channel avatar + subscriber header on channel page;
             //         portrait player channel avatar + restyled native like/dislike + larger meta text;
             //         Shorts channel button shows avatar; fix stale player controls returning from channel page).
-            versionCode 23718
-            versionName "v0.4.2-beta.6+st31.94"
+            // 23719 = v0.4.2-beta.7+st31.94 (native channel content tabs Videos/Shorts/Live/Playlists;
+            //         Back in the phone player stops the video and leaves (#23);
+            //         keep channel list after returning from a channel page (#22)).
+            versionCode 23719
+            versionName "v0.4.2-beta.7+st31.94"
         }
     }
 }

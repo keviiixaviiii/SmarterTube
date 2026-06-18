@@ -15,7 +15,7 @@ Status values:
 > **Unknown blocks a stable (1.0) release** for core user flows. Beta releases may ship with
 > Unknown rows, but they must be listed here honestly rather than assumed to work.
 
-Last reviewed for: `v0.4.2-beta.6+st31.94`. The channel-page and player rows touched this cycle
+Last reviewed for: `v0.4.2-beta.7+st31.94`. The channel-page and player rows touched this cycle
 (channel header, subscribe pill, portrait player avatar + like/dislike, and native channel
 content tabs) were re-verified on a device; other rows are carried from prior shipped behaviour
 and **have not been re-verified this cycle** — treat anything not explicitly re-tested as
@@ -28,7 +28,7 @@ provisional and confirm against the release checklist before 1.0.
 | Portrait home (drawer navigation) | Works | Shipped since alpha; re-verify per checklist |
 | Search (input + suggestions) | Works | |
 | Search results grid | Works | |
-| Voice search | Not implemented | String present, gated unavailable |
+| Voice search | Works | Mic button in search toolbar (RecognizerIntent); falls back to keyboard if no recognizer. Verified on device (#8) |
 | Channel page (header/tabs) | Works | Identity header (circular avatar + subscriber count); native content tabs (Videos / Shorts / Live / Playlists, one swipeable 2-column grid per group) |
 | Channel uploads | Works | |
 | Subscriptions feed | Works | Drives upload notifications |

@@ -3,7 +3,7 @@
 Tracked issues for the current beta. Keep this honest and current — it is part of the release
 checklist and what makes a beta release trustworthy.
 
-Current release: `v0.4.2-beta.6+st31.94`  ·  Upstream SmartTube base: `31.94`  ·  Channel: beta
+Current release: `v0.4.2-beta.7+st31.94`  ·  Upstream SmartTube base: `31.94`  ·  Channel: beta
 
 ## Status / classification
 
@@ -30,7 +30,6 @@ Current release: `v0.4.2-beta.6+st31.94`  ·  Upstream SmartTube base: `31.94`  
   upload alerts are delivered via a subscriptions-feed poll instead.
 - **No in-app APK install.** "Check for updates" detects a newer release and opens the GitHub
   asset/release URL; the user installs the APK manually.
-- **Voice search is not implemented** on the phone UI.
 - **Casting / Chromecast is not implemented.**
 
 ## Layout / orientation (to be audited in Gate C)
@@ -58,10 +57,14 @@ are **VERIFIED-ON-DEVICE**. Remaining items:
   per-card-type layout is a later refinement.
 - **Sort chips (Latest / Popular / Oldest) are not wired.** Upstream exposes them separately from
   the content tabs; the native channel page does not surface them yet.
-- **Channels list shows stale content after Back (pre-existing).** Backing out of a channel into
-  the subscriptions "Channels" list shows the previous channel's content until pull-to-refresh.
-  Root cause is in shared (`common`) navigation/view-state, not the tabs view. Tracked in
-  [#22](https://github.com/CodeSculptor/SmarterTube/issues/22).
+
+Resolved this release:
+
+- **Channels list keeps its content after Back** — fixed in beta.7. Backing out of a channel into
+  the subscriptions "Channels" list previously showed the previous channel's content until
+  pull-to-refresh; the list now retains its own content ([#22], fixed).
+
+[#22]: https://github.com/CodeSculptor/SmarterTube/issues/22
 
 ## Player
 
@@ -69,8 +72,13 @@ are **VERIFIED-ON-DEVICE**. Remaining items:
   shared player otherwise kept the engine alive on Back and navigated to the channel, leaving
   audio playing and looping Back between player and channel ([#23], fixed). Home / lock-screen
   background audio is unchanged; PIP mode still enters PIP on Back.
+- **Back from a video opens a duplicate channel page (pre-existing).** Leaving the player with Back
+  re-launches the channel as a fresh activity (shared `ViewManager.startParentView`), so returning
+  from a video opened inside a channel needs one extra Back to leave the channel. Minor (no crash /
+  no lingering audio); was masked in beta.6 by the audio loop that [#23] fixed. Tracked in [#24].
 
 [#23]: https://github.com/CodeSculptor/SmarterTube/issues/23
+[#24]: https://github.com/CodeSculptor/SmarterTube/issues/24
 
 ## Updater notes
 
