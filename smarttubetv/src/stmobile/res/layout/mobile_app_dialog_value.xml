@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Collapsed single-choice row: a radio category rendered as one row showing the category
+     title + the currently selected value, opening a bottom-sheet picker on tap. Replaces the
+     long expanded radio list ("CVS receipt") on multi-category settings screens. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:minHeight="56dp"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingStart="20dp"
+    android:paddingEnd="20dp"
+    android:paddingTop="10dp"
+    android:paddingBottom="10dp"
+    android:background="?android:attr/selectableItemBackground">
+
+    <TextView
+        android:id="@+id/value_title"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:textColor="@color/mobile_text_primary"
+        android:textSize="16sp" />
+
+    <TextView
+        android:id="@+id/value_current"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:maxWidth="180dp"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:textColor="@color/mobile_text_secondary"
+        android:textSize="15sp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="6dp"
+        android:text="›"
+        android:textColor="@color/mobile_text_secondary"
+        android:textSize="20sp" />
+</LinearLayout>

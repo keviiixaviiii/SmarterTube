@@ -32,6 +32,21 @@ Current release: `v0.4.2-beta.7+st31.94`  ·  Upstream SmartTube base: `31.94`  
   asset/release URL; the user installs the APK manually.
 - **Casting / Chromecast is not implemented.**
 
+## Settings UI (mobile-friendly inputs)
+
+Reworked for touch ([#26], verified on device — Player, General, Auto Frame Rate, Subtitles, etc.):
+
+- **Categorical single-choice settings** collapse to one value row that opens a bottom-sheet
+  picker instead of a long inline radio list (e.g. Video buffer, Audio language, Network engine).
+- **Numeric ranges** (playback speed, video zoom, seek interval, volume, auto-hide timeout) use an
+  inline slider over the option list. The slider only drags from its thumb, so scrolling the list
+  past a slider does not change its value.
+- Checkbox/switch rows are unchanged.
+
+Remaining (optional, Phase C): grouping/sectioning the long checkbox-heavy screens for scannability.
+
+[#26]: https://github.com/CodeSculptor/SmarterTube/issues/26
+
 ## Layout / orientation (to be audited in Gate C)
 
 - Phone landscape and tablet portrait/landscape layouts are **unverified**. TV/leanback layout

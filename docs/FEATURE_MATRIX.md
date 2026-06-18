@@ -34,7 +34,7 @@ provisional and confirm against the release checklist before 1.0.
 | Subscriptions feed | Works | Drives upload notifications |
 | History | Unknown | Not re-verified this cycle |
 | Playlists | Unknown | Not re-verified this cycle |
-| Settings screen (portrait) | Works | |
+| Settings screen (portrait) | Works | Mobile-friendly inputs (#26, verified on device): categorical single-choice settings collapse to a value row + bottom-sheet picker; numeric ranges (speed, zoom, seek interval, volume, auto-hide) use an inline slider that only drags from the thumb so list scrolling is unaffected |
 | Theme picker (light/dark) | Unknown | Recent work; verify on device |
 | About screen | Works | |
 
