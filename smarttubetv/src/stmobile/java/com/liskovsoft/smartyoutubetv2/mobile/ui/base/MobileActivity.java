@@ -86,7 +86,21 @@ public abstract class MobileActivity extends MotherActivity {
         // Register in the ViewManager activity stack (the TV LeanbackActivity does the same).
         // Without this the stack only tracks TV/Leanback activities, so the player's
         // startParentView() can't see a phone screen as its caller and falls back to Home.
-        getViewManager().addTop(this);
+        if (registersInViewStack()) {
+            getViewManager().addTop(this);
+        }
+    }
+
+    /**
+     * Whether this activity is a navigation destination that belongs in the ViewManager's
+     * activity stack. Transient overlays (the settings dialog) return {@code false}: adding them
+     * makes them a Back target, so pressing Back on the player would relaunch the just-closed
+     * dialog — the player's {@code finishReally() → startParentView()} walks this very stack and
+     * would pop to the dialog sitting just under it. Mirrors TV, where AppDialogActivity extends
+     * MotherActivity (no addTop), not LeanbackActivity.
+     */
+    protected boolean registersInViewStack() {
+        return true;
     }
 
     @Override

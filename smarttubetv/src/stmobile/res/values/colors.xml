@@ -26,4 +26,7 @@
 
     <color name="mobile_divider">#1F000000</color>
     <color name="mobile_thumbnail_placeholder">#FFE0E0E0</color>
+
+    <!-- Dim behind a bottom-sheet sub-dialog. Theme-independent (same in light/night). -->
+    <color name="mobile_scrim">#99000000</color>
 </resources>

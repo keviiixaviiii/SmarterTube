@@ -4,6 +4,7 @@ import android.content.res.Configuration;
 import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 
 import androidx.annotation.Nullable;
 
@@ -19,6 +20,7 @@ import com.liskovsoft.smartyoutubetv2.tv.R;
  */
 public class MobileAppDialogActivity extends MobileActivity {
     private boolean mPanelMode;
+    private boolean mSheetMode;
 
     // One-shot suppression deadline (epoch millis). When set and still fresh, the NEXT
     // dialog launch finishes itself immediately instead of showing. Used by the sign-in
@@ -35,16 +37,17 @@ public class MobileAppDialogActivity extends MobileActivity {
     }
 
     /**
-     * In comments panel mode, apply the translucent panel theme as the LAST setTheme of the
-     * super.onCreate chain. MotherActivity.onCreate calls initTheme(), and MobileActivity
-     * overrides it to set the opaque brand theme — if we only setTheme() before super.onCreate
-     * that opaque theme wins and kills windowIsTranslucent (black fill above the comments).
-     * Setting it here ensures translucency survives. (FitSystemWindows, applied after this by
-     * MotherActivity, only touches the status/nav bars, not windowIsTranslucent/background.)
+     * In comments panel mode (or bottom-sheet sub-dialog mode), apply the translucent panel theme
+     * as the LAST setTheme of the super.onCreate chain. MotherActivity.onCreate calls initTheme(),
+     * and MobileActivity overrides it to set the opaque brand theme — if we only setTheme() before
+     * super.onCreate that opaque theme wins and kills windowIsTranslucent (black fill behind the
+     * card / above the comments). Setting it here ensures translucency survives. (FitSystemWindows,
+     * applied after this by MotherActivity, only touches the status/nav bars, not
+     * windowIsTranslucent/background.)
      */
     @Override
     protected void initTheme() {
-        if (mPanelMode) {
+        if (mPanelMode || mSheetMode) {
             setTheme(R.style.Theme_SmarterTube_Mobile_TranslucentPanel);
         } else {
             super.initTheme();
@@ -63,11 +66,28 @@ public class MobileAppDialogActivity extends MobileActivity {
         mPanelMode = getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT
                 && AppDialogPresenter.instance(this).isComments();
 
+        // A focused sub-dialog (e.g. the Video speed slider from the player) shows as a bottom-sheet
+        // card; make the window translucent so the still-playing video (or the screen behind) stays
+        // visible behind the dim scrim instead of a black blackout. Orientation-agnostic — unlike the
+        // portrait-only comments panel, the sheet is most useful over the landscape player. Decided
+        // here for the same reason as mPanelMode: windowIsTranslucent is fixed before super.onCreate.
+        mSheetMode = !mPanelMode && AppDialogPresenter.instance(this).isSheetDialog();
+
         super.onCreate(savedInstanceState);
 
-        if (mPanelMode) {
-            // Kill the default slide-in/out; the panel should appear in place over the player.
+        if (mPanelMode || mSheetMode) {
+            // Kill the default slide-in/out; the panel/sheet should appear in place over the player.
             overridePendingTransition(0, 0);
+        }
+
+        if (mSheetMode) {
+            // The player runs fullscreen with a translucent nav bar (App.Theme.Leanback.Player:
+            // windowFullscreen + windowTranslucentNavigation). Match those flags here so dropping a
+            // translucent dialog over it does not make the system bars reappear and resize the
+            // player window — that resize leaves the video SurfaceView rendering scaled-down in the
+            // top-left corner with black around it.
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN
+                    | WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION);
         }
 
         // Consume a pending one-shot suppression: if armed and still fresh, this dialog is
@@ -83,6 +103,14 @@ public class MobileAppDialogActivity extends MobileActivity {
 
         if (mPanelMode) {
             applyPanelInsets();
+        } else if (mSheetMode) {
+            // Drop the activity root's opaque fill so the translucent window shows the content
+            // behind it; the fragment paints its own dim scrim + bottom card over the top. No strip
+            // inset here — the sheet is anchored to the bottom, not below a 16:9 player strip.
+            View root = findViewById(R.id.mobile_app_dialog_root);
+            if (root != null) {
+                root.setBackground(null);
+            }
         }
 
         if (getSupportFragmentManager().findFragmentById(R.id.mobile_app_dialog_root) == null) {
@@ -122,6 +150,14 @@ public class MobileAppDialogActivity extends MobileActivity {
     }
 
     @Override
+    protected boolean registersInViewStack() {
+        // The settings dialog (and comments panel) is a transient overlay, not a navigation node.
+        // Keeping it out of the ViewManager stack stops Back on the player from re-opening a
+        // just-closed dialog (issue: bring up Video speed → Back on the video → panel returns).
+        return false;
+    }
+
+    @Override
     public void onBackPressed() {
         // A nested comments replies thread is one back-level inside the fragment: restore the
         // top-level comments instead of closing the dialog.
@@ -145,8 +181,8 @@ public class MobileAppDialogActivity extends MobileActivity {
             fragment.onFinishCallback();
         }
         super.finish();
-        if (mPanelMode) {
-            // Match the no-animation entrance: panel closes in place, no slide-out.
+        if (mPanelMode || mSheetMode) {
+            // Match the no-animation entrance: panel/sheet closes in place, no slide-out.
             overridePendingTransition(0, 0);
         }
     }

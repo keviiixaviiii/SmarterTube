@@ -3,63 +3,87 @@
     Phone-native replacement for the TV Leanback AppDialog. Toolbar with title + back, then
     a vertical list of option categories (section headers, radio/check/switch/button rows,
     long-text blocks). Drives the unchanged AppDialogPresenter.
+
+    The outer frame lets a short single-category sub-dialog (e.g. Video speed) be re-laid out
+    as a bottom-sheet card at runtime (see MobileAppDialogFragment#applyPresentation): the card
+    (dialog_content) anchors to the bottom over a tap-to-dismiss scrim. By default the content
+    fills the whole frame (full-screen dialog) and the scrim/handle are inert.
 -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/dialog_root_frame"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="@color/mobile_background">
+    android:layout_height="match_parent">
 
     <LinearLayout
+        android:id="@+id/dialog_content"
         android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:background="@color/mobile_primary">
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="@color/mobile_background">
 
-        <TextView
-            android:id="@+id/btn_back"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
-            android:gravity="center"
-            android:text="←"
-            android:textColor="@color/mobile_text_primary"
-            android:textSize="24sp"
-            android:background="?android:attr/selectableItemBackground" />
-
-        <TextView
-            android:id="@+id/dialog_title"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:singleLine="true"
-            android:ellipsize="end"
-            android:textColor="@color/mobile_text_primary"
-            android:textSize="18sp" />
-    </LinearLayout>
-
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1">
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/options_list"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:clipToPadding="false"
-            android:paddingBottom="16dp" />
-
-        <!-- Centered loading / empty / error message, used by the comments screen. -->
-        <TextView
-            android:id="@+id/options_status"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:padding="24dp"
-            android:gravity="center"
-            android:textColor="@color/mobile_text_secondary"
-            android:textSize="14sp"
+        <View
+            android:id="@+id/sheet_handle"
+            android:layout_width="36dp"
+            android:layout_height="4dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="4dp"
+            android:background="@drawable/mobile_sheet_handle"
             android:visibility="gone" />
-    </FrameLayout>
-</LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/dialog_header"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@color/mobile_primary">
+
+            <TextView
+                android:id="@+id/btn_back"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:gravity="center"
+                android:text="←"
+                android:textColor="@color/mobile_text_primary"
+                android:textSize="24sp"
+                android:background="?android:attr/selectableItemBackground" />
+
+            <TextView
+                android:id="@+id/dialog_title"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:singleLine="true"
+                android:ellipsize="end"
+                android:textColor="@color/mobile_text_primary"
+                android:textSize="18sp" />
+        </LinearLayout>
+
+        <FrameLayout
+            android:id="@+id/options_container"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/options_list"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:paddingBottom="16dp" />
+
+            <!-- Centered loading / empty / error message, used by the comments screen. -->
+            <TextView
+                android:id="@+id/options_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:padding="24dp"
+                android:gravity="center"
+                android:textColor="@color/mobile_text_secondary"
+                android:textSize="14sp"
+                android:visibility="gone" />
+        </FrameLayout>
+    </LinearLayout>
+</FrameLayout>

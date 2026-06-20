@@ -39,6 +39,7 @@ import com.liskovsoft.smartyoutubetv2.common.app.presenters.ChannelPresenter;
 import com.liskovsoft.smartyoutubetv2.common.app.presenters.PlaybackPresenter;
 import com.liskovsoft.smartyoutubetv2.common.misc.MediaServiceManager;
 import com.liskovsoft.smartyoutubetv2.common.misc.RemoteControlService;
+import com.liskovsoft.smartyoutubetv2.common.prefs.PlayerData;
 import com.liskovsoft.smartyoutubetv2.tv.R;
 import com.liskovsoft.smartyoutubetv2.tv.ui.playback.PlaybackFragment;
 import com.liskovsoft.smartyoutubetv2.tv.ui.playback.other.VideoPlayerGlue;
@@ -146,6 +147,8 @@ public class MobilePlaybackFragment extends PlaybackFragment {
 
     // Auto-hide for the Shorts overlay chrome (rail + back button).
     private final Handler mChromeHandler = new Handler();
+    // Hides the Shorts chrome (action rail + back button + seek bar). Only ever scheduled when
+    // the auto-hide setting is on, so firing always means "hide now".
     private final Runnable mHideShortsChr = () -> setShortsChrome(false);
 
     /**
@@ -670,9 +673,24 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         }
         set.applyTo(mRoot);
 
-        // For Shorts: hide the Leanback transport buttons (play/pause/skip) while keeping the
-        // seek bar. For regular/full-screen: restore them.
-        applyLeanbackControlsVisibility(isShorts && strip);
+        // Non-Shorts: make sure the Leanback control row is visible (a prior Shorts auto-hide
+        // may have left it INVISIBLE). In Shorts, setShortsChrome owns the control row.
+        if (layoutState != 2) setShortsControlsVisible(true);
+
+        // Shorts shows only the seek bar over full-bleed video — kill the Leanback dim scrim
+        // (BG_LIGHT, set at fragment creation) so the video isn't darkened. Restore it for
+        // regular/full-screen playback.
+        setBackgroundType(layoutState == 2 ? BG_NONE : BG_LIGHT);
+
+        if (layoutState == 2) {
+            // The overlay was hidden by onStart()/createPlayerGlue() before mLayoutState reached
+            // 2. Bring it to its rest position once (and lazy-inflate the rows); the guard in
+            // hideControlsOverlay then keeps it shown for the whole Shorts session. From here the
+            // seek bar is shown/hidden by setShortsChrome (direct view visibility), never via
+            // Leanback's translate animation — which was leaving it stuck near the top.
+            showControlsOverlay(false);
+            revealShortsChrome();
+        }
     }
 
     @Override
@@ -681,20 +699,31 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         // The overlay row views are created lazily on the first reveal — re-apply here so the
         // strip tweaks land no matter when the views appear.
         applyOverlayDecorVisibility(mStripMode);
-        // Re-hide the Leanback buttons for Shorts after the lazy inflate.
-        applyLeanbackControlsVisibility(mLayoutState == 2);
+        // Non-Shorts: ensure the control row is visible after the lazy inflate. In Shorts the
+        // control row (transport buttons + seek bar + time) is owned by setShortsChrome.
+        if (mLayoutState != 2) setShortsControlsVisible(true);
         // Back button follows the player controls on all non-Shorts pages.
         if (mShortsBackBtn != null && mLayoutState != 2) mShortsBackBtn.setVisibility(View.VISIBLE);
     }
 
     @Override
     public void hideControlsOverlay(boolean runAnimation) {
-        // In Shorts the seek bar must stay visible at all times. The transport buttons
-        // (controls_dock, secondary_controls_dock, time_info) are already GONE via
-        // applyLeanbackControlsVisibility, so skipping Leanback's fade has no phantom-tap risk.
+        // In Shorts the Leanback overlay stays shown for the whole session: its only visible
+        // part is the seek bar, which we show/hide directly via setShortsChrome. Blocking the
+        // Leanback hide here (used by e.g. PlayerUIController's auto-hide) avoids the translate
+        // animation that left the seek bar stuck near the top of the screen.
         if (mLayoutState == 2) return;
         if (mShortsBackBtn != null) mShortsBackBtn.setVisibility(View.INVISIBLE);
         super.hideControlsOverlay(runAnimation);
+    }
+
+    @Override
+    protected void setBackgroundResource(int resId) {
+        // Skip the overlay scrim in Shorts — only the seek bar shows, and the dim would just
+        // darken the video. Belt-and-suspenders with BG_NONE in applyMobileLayout, since
+        // PlaybackFragment.updatePlayerBackground re-applies this drawable on every show.
+        if (mLayoutState == 2) return;
+        super.setBackgroundResource(resId);
     }
 
     /**
@@ -702,30 +731,48 @@ public class MobilePlaybackFragment extends PlaybackFragment {
      * visible for Shorts. Controls are inflated lazily — null-checks are intentional; this is
      * also called from showControlsOverlay() to catch the first inflate.
      */
-    private void applyLeanbackControlsVisibility(boolean hideForShorts) {
+    /**
+     * Toggle the whole Leanback control row (transport buttons + seek bar + time readout). In
+     * Shorts this is driven by setShortsChrome so the controls auto-hide together with the action
+     * rail; toggling the row's view visibility directly avoids Leanback's translate animation
+     * (which left the seek bar stuck near the top). INVISIBLE, not GONE, keeps the row's layout
+     * slot so nothing reflows when it comes back.
+     */
+    private void setShortsControlsVisible(boolean visible) {
         if (getView() == null) return;
-        int vis = hideForShorts ? View.GONE : View.VISIBLE;
-        for (int id : new int[]{R.id.controls_dock, R.id.secondary_controls_dock,
-                                 R.id.time_info}) {
-            View v = getView().findViewById(id);
-            if (v != null) v.setVisibility(vis);
+        View transportRow = getView().findViewById(R.id.transport_row);
+        if (transportRow != null) {
+            transportRow.setVisibility(visible ? View.VISIBLE : View.INVISIBLE);
         }
     }
 
-    /** Show or hide the Shorts overlay chrome (action rail + back button only). */
+    /**
+     * Show or hide the full Shorts overlay chrome: action rail + back button + the entire Leanback
+     * control row (play/pause, skip, CC, seek bar, time). They all reveal and auto-hide together.
+     */
     private void setShortsChrome(boolean visible) {
         int vis = visible ? View.VISIBLE : View.INVISIBLE;
         if (mShortsActionRail != null) mShortsActionRail.setVisibility(vis);
         // Back button is always-visible in regular portrait; only auto-hide it in Shorts.
         if (mShortsBackBtn != null && mLayoutState == 2) mShortsBackBtn.setVisibility(vis);
+        if (mLayoutState == 2) setShortsControlsVisible(visible);
     }
 
-    /** Reveal the Shorts overlay chrome for 3 seconds, then auto-hide. No-op outside Shorts. */
+    /**
+     * Reveal the Shorts overlay chrome, then auto-hide after 3 seconds — but only when the player
+     * UI auto-hide setting is enabled. When it's set to "Never" (timeout 0) the chrome stays put.
+     * No-op outside Shorts.
+     */
     private void revealShortsChrome() {
         if (mLayoutState != 2) return;
+        // A Short→Short swipe rebuilds the glue with everything visible and skips applyMobileLayout
+        // (same layout state), so re-hide the strip decor (title/quality/date) on every reveal.
+        applyOverlayDecorVisibility(true);
         setShortsChrome(true);
         mChromeHandler.removeCallbacks(mHideShortsChr);
-        mChromeHandler.postDelayed(mHideShortsChr, 3000);
+        if (PlayerData.instance(getContext()).getUiHideTimeoutSec() > 0) {
+            mChromeHandler.postDelayed(mHideShortsChr, 3000);
+        }
     }
 
     /** Tap on the video area: toggle play/pause and flash the indicator icon. */
@@ -1020,6 +1067,9 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         mChromeHandler.removeCallbacks(mShortsFrameTimeout);
         fadeOutPoster(mShortsNextPoster);
         fadeOutPoster(mShortsPrevPoster);
+        // The swipe hid the chrome + seek bar; bring them back for the freshly-loaded Short and
+        // restart the auto-hide cycle (no-op if the overlay isn't in Shorts mode anymore).
+        revealShortsChrome();
         warmNextShort();
     }
 

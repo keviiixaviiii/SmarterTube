@@ -226,8 +226,11 @@ android {
             // 23719 = v0.4.2-beta.7+st31.94 (native channel content tabs Videos/Shorts/Live/Playlists;
             //         Back in the phone player stops the video and leaves (#23);
             //         keep channel list after returning from a channel page (#22)).
-            versionCode 23719
-            versionName "v0.4.2-beta.7+st31.94"
+            // 23720 = v0.4.2-beta.8+st31.94 (Shorts seek bar visible + auto-hide (#28);
+            //         settings dialog presents as a bottom-sheet card over the player;
+            //         Back on player no longer re-opens a just-closed settings dialog).
+            versionCode 23720
+            versionName "v0.4.2-beta.8+st31.94"
         }
     }
 }

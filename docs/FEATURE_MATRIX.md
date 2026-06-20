@@ -15,11 +15,10 @@ Status values:
 > **Unknown blocks a stable (1.0) release** for core user flows. Beta releases may ship with
 > Unknown rows, but they must be listed here honestly rather than assumed to work.
 
-Last reviewed for: `v0.4.2-beta.7+st31.94`. The channel-page and player rows touched this cycle
-(channel header, subscribe pill, portrait player avatar + like/dislike, and native channel
-content tabs) were re-verified on a device; other rows are carried from prior shipped behaviour
-and **have not been re-verified this cycle** — treat anything not explicitly re-tested as
-provisional and confirm against the release checklist before 1.0.
+Last reviewed for: `v0.4.2-beta.8+st31.94`. Rows re-verified on a device this cycle: Shorts
+playback (seek bar, auto-hide, swipe-to-next), Settings screen (bottom-sheet panel over player,
+Back navigation). Other rows are carried from prior shipped behaviour — treat anything not
+explicitly re-tested as provisional and confirm against the release checklist before 1.0.
 
 ## Browsing & navigation
 
@@ -57,11 +56,11 @@ provisional and confirm against the release checklist before 1.0.
 | Portrait player | Partially works | Channel avatar + tappable channel row; native like/dislike under views; verify comments |
 | In-panel comments (portrait) | Partially works | Read-only; posting is blocked on auth/PoToken |
 | Comments posting | Not implemented | Blocked on innertube auth + PoToken |
-| Shorts playback | Works | TikTok-style UX: swipe pager, tap-to-pause, vertical action rail (like/dislike/comments/channel), auto-hide chrome. VERIFIED-ON-DEVICE Gate B. |
-| Play / pause / seek | Works | Play/pause icon now stays in sync after rotating into landscape (control set is rebuilt on rotation; the rebuilt action is re-synced to the real playback state). Verified on device |
+| Shorts playback | Works | TikTok-style UX: swipe pager, tap-to-pause, vertical action rail (like/dislike/comments/channel), auto-hide chrome, seek bar visible and auto-hides with chrome (#28, fixed beta.8). VERIFIED-ON-DEVICE. |
+| Play / pause / seek | Works | Play/pause icon stays in sync after rotating into landscape (rebuilt action re-synced to real playback state). Verified on device |
 | Quality menu | Unknown | |
 | Captions | Unknown | |
-| Playback speed | Works | Upstream feature |
+| Playback speed | Works | Opens as a translucent bottom-sheet card over the player (beta.8); video stays visible behind a dim scrim. Known issue: player SurfaceView shrinks in landscape while the panel is open ([#29]) |
 | SponsorBlock | Works | Upstream feature |
 | Return YouTube Dislike | Works | Upstream feature |
 | DeArrow | Unknown | Upstream feature; verify in phone UI |

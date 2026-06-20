@@ -3,7 +3,7 @@
 Tracked issues for the current beta. Keep this honest and current — it is part of the release
 checklist and what makes a beta release trustworthy.
 
-Current release: `v0.4.2-beta.7+st31.94`  ·  Upstream SmartTube base: `31.94`  ·  Channel: beta
+Current release: `v0.4.2-beta.8+st31.94`  ·  Upstream SmartTube base: `31.94`  ·  Channel: beta
 
 ## Status / classification
 
@@ -62,7 +62,12 @@ Reworked for touch ([#26], verified on device — Player, General, Auto Frame Ra
 - Gate C fixed a loop regression: upstream 31.94 changed the repeat handler from
   `setPositionMs(100)` to `setPositionMs(0)`; the seek to 0ms briefly blanked the surface on
   loop. Fixed in stmobile by covering the seek with the current video's thumbnail poster.
-  **VERIFIED-ON-DEVICE Gate C.** No remaining Shorts-specific issues.
+  **VERIFIED-ON-DEVICE Gate C.**
+- **Shorts seek bar now visible and auto-hides** — fixed in beta.8 ([#28]). The Leanback
+  overlay was hidden for Shorts, blocking the seek bar; the fix keeps the overlay always-shown
+  and controls the bar's visibility directly. Dim scrim removed for Shorts. Auto-hide honours
+  the *Auto-hide UI* timeout setting; when the setting is off (0s) the seek bar stays visible.
+  **VERIFIED-ON-DEVICE.**
 
 ## Channel page (native content tabs)
 
@@ -97,10 +102,24 @@ Resolved this release:
   Rotating into landscape rebuilds the full transport control set mid-playback, creating a fresh
   play/pause action that defaulted to the PLAY icon; it is now re-synced to the real playback state
   on every rebuild, so the icon is correct from the moment landscape is entered.
+- **Settings panel Back navigation fixed** — beta.8. Opening a settings panel (e.g. Video speed)
+  during playback and pressing Back on the video previously re-opened the panel. Fixed by
+  excluding the dialog activity from the ViewManager navigation stack. **VERIFIED-ON-DEVICE.**
+- **Settings panels now show as a bottom-sheet card over the player.** Single-category settings
+  dialogs (e.g. Video speed, Quality) open as a translucent bottom-sheet so the video stays
+  visible behind a dim scrim. Tap outside the card or press Back to close without leaving the
+  player. **VERIFIED-ON-DEVICE.**
+- **Video shrinks in landscape when a settings panel is open** ([#29]). When the video is playing
+  in landscape fullscreen and a settings panel (Video speed, Quality, etc.) is opened, the player
+  SurfaceView resizes to fit a smaller window as the system nav bar re-appears for the dialog
+  window. The video returns to full size when the panel is dismissed. Portrait playback is
+  unaffected. Being tracked for a future fix; the feature otherwise works correctly in portrait.
 
 [#23]: https://github.com/CodeSculptor/SmarterTube/issues/23
 [#24]: https://github.com/CodeSculptor/SmarterTube/issues/24
 [#27]: https://github.com/CodeSculptor/SmarterTube/issues/27
+[#28]: https://github.com/CodeSculptor/SmarterTube/issues/28
+[#29]: https://github.com/CodeSculptor/SmarterTube/issues/29
 
 ## Updater notes
 

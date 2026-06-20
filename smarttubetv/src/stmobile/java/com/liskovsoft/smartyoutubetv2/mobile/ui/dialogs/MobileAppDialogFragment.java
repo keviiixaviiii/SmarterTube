@@ -2,9 +2,12 @@ package com.liskovsoft.smartyoutubetv2.mobile.ui.dialogs;
 
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -39,10 +42,18 @@ import java.util.List;
  * just opens a new {@code MobileAppDialogActivity}).
  */
 public class MobileAppDialogFragment extends Fragment implements AppDialogView {
+    /** A single-category sub-dialog this short (or shorter) is presented as a bottom-sheet card. */
+    private static final int SHEET_MAX_ROWS = 5;
+
     private AppDialogPresenter mPresenter;
     private TextView mTitleView;
     private RecyclerView mList;
     private TextView mStatusView;
+    private View mRootFrame;
+    private LinearLayout mContent;
+    private View mHandle;
+    private View mHeader;
+    private View mOptionsContainer;
     private MobileAppDialogAdapter mAdapter;
     private MobileCommentsAdapter mCommentsAdapter;
     private CommentsReceiver mCommentsReceiver;
@@ -69,6 +80,11 @@ public class MobileAppDialogFragment extends Fragment implements AppDialogView {
 
         mTitleView = view.findViewById(R.id.dialog_title);
         mStatusView = view.findViewById(R.id.options_status);
+        mRootFrame = view.findViewById(R.id.dialog_root_frame);
+        mContent = view.findViewById(R.id.dialog_content);
+        mHandle = view.findViewById(R.id.sheet_handle);
+        mHeader = view.findViewById(R.id.dialog_header);
+        mOptionsContainer = view.findViewById(R.id.options_container);
         mList = view.findViewById(R.id.options_list);
         mList.setLayoutManager(new LinearLayoutManager(getContext()));
         mAdapter = new MobileAppDialogAdapter();
@@ -164,6 +180,76 @@ public class MobileAppDialogFragment extends Fragment implements AppDialogView {
 
         if (mAdapter != null) {
             mAdapter.setCategories(categories, isExpandable);
+            // A focused sub-dialog (one expandable category) that renders to just a handful of
+            // rows — e.g. the Video speed slider opened from the player — reads better as a bottom
+            // card at thumb height than as a sparse full screen. Multi-category settings screens
+            // (General, Player, …) keep the full-screen layout. Gate on the presenter's
+            // isSheetDialog() — the same predicate the host activity uses to choose the translucent
+            // window — so the card never renders over an opaque window; then refine by rendered row
+            // count, which the presenter can't know (a numeric category collapses to one slider row).
+            boolean sheet = mPresenter != null && mPresenter.isSheetDialog()
+                    && mAdapter.getItemCount() > 0 && mAdapter.getItemCount() <= SHEET_MAX_ROWS;
+            applyPresentation(sheet);
+        }
+    }
+
+    /**
+     * Swap between the full-screen dialog layout and a bottom-sheet card. The card layout is set
+     * here (it depends on the categories, which only arrive in {@link #show}); the host activity
+     * separately makes its window translucent for the same sub-dialogs (see
+     * {@code MobileAppDialogActivity} + {@link AppDialogPresenter#isSheetDialog()}), so the scrim
+     * painted on the root frame below dims the still-playing video instead of solid black.
+     */
+    private void applyPresentation(boolean sheet) {
+        if (mContent == null || mRootFrame == null) {
+            return;
+        }
+
+        FrameLayout.LayoutParams contentLp = (FrameLayout.LayoutParams) mContent.getLayoutParams();
+        LinearLayout.LayoutParams listLp = (LinearLayout.LayoutParams) mOptionsContainer.getLayoutParams();
+
+        if (sheet) {
+            contentLp.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+            contentLp.gravity = Gravity.BOTTOM;
+            mContent.setBackgroundResource(R.drawable.mobile_sheet_bg);
+            mContent.setClickable(true); // swallow taps on the card so they don't dismiss
+
+            // Hug the content instead of stretching to fill the screen.
+            listLp.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+            listLp.weight = 0;
+
+            mHandle.setVisibility(View.VISIBLE);
+            mHeader.setBackgroundColor(0); // let the rounded card surface show through the top
+            mList.setNestedScrollingEnabled(false);
+
+            mRootFrame.setBackgroundResource(R.color.mobile_scrim);
+            mRootFrame.setOnClickListener(v -> dismissSheet());
+        } else {
+            contentLp.height = ViewGroup.LayoutParams.MATCH_PARENT;
+            contentLp.gravity = Gravity.TOP;
+            mContent.setBackgroundResource(R.color.mobile_background);
+            mContent.setClickable(false);
+
+            listLp.height = 0;
+            listLp.weight = 1;
+
+            mHandle.setVisibility(View.GONE);
+            mHeader.setBackgroundResource(R.color.mobile_primary);
+            mList.setNestedScrollingEnabled(true);
+
+            mRootFrame.setBackground(null);
+            mRootFrame.setOnClickListener(null);
+            mRootFrame.setClickable(false);
+        }
+
+        mContent.setLayoutParams(contentLp);
+        mOptionsContainer.setLayoutParams(listLp);
+    }
+
+    /** Tap outside the bottom-sheet card: close it the same way Back does. */
+    private void dismissSheet() {
+        if (getActivity() != null) {
+            getActivity().onBackPressed();
         }
     }
 

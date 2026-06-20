@@ -255,6 +255,34 @@ public class AppDialogPresenter extends BasePresenter<AppDialogView> {
     }
 
     /**
+     * A focused sub-dialog: a single expandable category (e.g. the Video speed slider opened from
+     * the player). The phone flavor presents these as a bottom-sheet card over a translucent
+     * window so the still-playing video stays visible behind a dim scrim. Read at activity
+     * onCreate (from the backup, like {@link #isComments()}) so the host can pick a translucent
+     * theme before the categories reach the view. Comments/long-text/chat have their own panels.
+     *
+     * Window-level gate only — the actual card-vs-full-screen layout decision stays in the phone
+     * fragment (which can collapse a numeric category into a single slider row). The two only need
+     * to agree that "card ⇒ translucent"; an over-translucent full-screen dialog just paints its
+     * opaque content over the transparent window, so erring wide here is harmless.
+     */
+    public boolean isSheetDialog() {
+        if (!mBackupIsExpandable || mBackupCategories == null || mBackupCategories.size() != 1) {
+            return false;
+        }
+
+        OptionCategory optionCategory = mBackupCategories.get(0);
+
+        if (optionCategory == null || optionCategory.options == null || optionCategory.options.isEmpty()) {
+            return false;
+        }
+
+        return optionCategory.type != OptionCategory.TYPE_COMMENTS
+                && optionCategory.type != OptionCategory.TYPE_LONG_TEXT
+                && optionCategory.type != OptionCategory.TYPE_CHAT;
+    }
+
+    /**
      * Show a category contents instead of title if a single category has been added
      */
     public void enableExpandable(boolean enable) {
