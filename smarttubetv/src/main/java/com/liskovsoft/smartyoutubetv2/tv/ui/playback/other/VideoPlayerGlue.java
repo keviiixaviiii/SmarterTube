@@ -291,10 +291,12 @@ public class VideoPlayerGlue extends MaxControlsVideoPlayerGlue<PlayerAdapter> i
         }
 
         // The branches above recreate a fresh play/pause action that defaults to the PLAY icon.
-        // Re-sync it to the real player state; otherwise, while already playing (no state event to
-        // correct it), the icon stays stale — most visibly after rotating into landscape, where the
-        // full control set is rebuilt mid-playback (see MobilePlaybackFragment#syncCompactControls).
-        onUpdatePlaybackState();
+        // Re-sync just that icon to the real player state; otherwise, while already playing (no
+        // state event to correct it), the icon stays stale — most visibly after rotating into
+        // landscape, where the full control set is rebuilt mid-playback (see
+        // MobilePlaybackFragment#syncCompactControls). Icon-only on purpose: a control rebuild must
+        // not toggle progress/auto-hide, which the normal playback callbacks manage.
+        syncPlayPauseAction();
     }
 
     @Override

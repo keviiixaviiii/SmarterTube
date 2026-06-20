@@ -292,9 +292,31 @@ public class PlaybackTransportControlGlue<T extends PlayerAdapter>
         super.onPlayStateChanged();
     }
 
-    protected void onUpdatePlaybackState() {
+    void onUpdatePlaybackState() {
         mIsPlaying = mPlayerAdapter.isPlaying();
         updatePlaybackState(mIsPlaying);
+    }
+
+    /**
+     * Sync ONLY the play/pause icon (and {@link #mIsPlaying}) to the real player state, without
+     * touching progress updating or the controls-overlay auto-hide. Used after the control row is
+     * rebuilt (e.g. the phone compact↔full swap on rotation) so the freshly-created action doesn't
+     * show a stale icon. Deliberately narrower than {@link #onUpdatePlaybackState()} so a control
+     * rebuild can't perturb auto-hide/progress state (which the normal playback callbacks own).
+     */
+    protected void syncPlayPauseAction() {
+        if (getControlsRow() == null || mPlayPauseAction == null) {
+            return;
+        }
+        mIsPlaying = mPlayerAdapter.isPlaying();
+        int index = mIsPlaying
+                ? PlaybackControlsRow.PlayPauseAction.INDEX_PAUSE
+                : PlaybackControlsRow.PlayPauseAction.INDEX_PLAY;
+        if (mPlayPauseAction.getIndex() != index) {
+            mPlayPauseAction.setIndex(index);
+            notifyItemChanged((ArrayObjectAdapter) getControlsRow().getPrimaryActionsAdapter(),
+                    mPlayPauseAction);
+        }
     }
 
     private void updatePlaybackState(boolean isPlaying) {
