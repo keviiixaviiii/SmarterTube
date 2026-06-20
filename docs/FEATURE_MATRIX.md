@@ -58,7 +58,7 @@ provisional and confirm against the release checklist before 1.0.
 | In-panel comments (portrait) | Partially works | Read-only; posting is blocked on auth/PoToken |
 | Comments posting | Not implemented | Blocked on innertube auth + PoToken |
 | Shorts playback | Works | TikTok-style UX: swipe pager, tap-to-pause, vertical action rail (like/dislike/comments/channel), auto-hide chrome. VERIFIED-ON-DEVICE Gate B. |
-| Play / pause / seek | Works | |
+| Play / pause / seek | Works | Play/pause icon now stays in sync after rotating into landscape (control set is rebuilt on rotation; the rebuilt action is re-synced to the real playback state). Verified on device |
 | Quality menu | Unknown | |
 | Captions | Unknown | |
 | Playback speed | Works | Upstream feature |

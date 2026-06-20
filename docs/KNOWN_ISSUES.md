@@ -93,9 +93,14 @@ Resolved this release:
   re-launches the channel as a fresh activity (shared `ViewManager.startParentView`), so returning
   from a video opened inside a channel needs one extra Back to leave the channel. Minor (no crash /
   no lingering audio); was masked in beta.6 by the audio loop that [#23] fixed. Tracked in [#24].
+- **Landscape play/pause icon was out of sync after rotation** — fixed ([#27], verified on device).
+  Rotating into landscape rebuilds the full transport control set mid-playback, creating a fresh
+  play/pause action that defaulted to the PLAY icon; it is now re-synced to the real playback state
+  on every rebuild, so the icon is correct from the moment landscape is entered.
 
 [#23]: https://github.com/CodeSculptor/SmarterTube/issues/23
 [#24]: https://github.com/CodeSculptor/SmarterTube/issues/24
+[#27]: https://github.com/CodeSculptor/SmarterTube/issues/27
 
 ## Updater notes
 

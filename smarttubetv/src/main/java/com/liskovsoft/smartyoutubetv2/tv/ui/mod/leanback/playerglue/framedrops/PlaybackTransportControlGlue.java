@@ -292,7 +292,7 @@ public class PlaybackTransportControlGlue<T extends PlayerAdapter>
         super.onPlayStateChanged();
     }
 
-    void onUpdatePlaybackState() {
+    protected void onUpdatePlaybackState() {
         mIsPlaying = mPlayerAdapter.isPlaying();
         updatePlaybackState(mIsPlaying);
     }
