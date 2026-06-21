@@ -73,6 +73,7 @@ explicitly re-tested as provisional and confirm against the release checklist be
 | Check for updates (phone) | Works | Gate A: scheme-aware, channel + ABI; see UPDATER_COMPATIBILITY.md |
 | Upstream auto-update check on phone | Not applicable | Inert (phone versionCode ≫ upstream); fork uses its own checker |
 | In-app APK install | Not implemented | Update opens the GitHub asset/release URL for manual install |
+| Self-hosted F-Droid repo | Works | GitHub Pages, our own signed APKs; auto-published on release (fdroid/) |
 
 ## Layout & orientation
 
@@ -91,4 +92,4 @@ explicitly re-tested as provisional and confirm against the release checklist be
 | Up to 8K / 60fps / HDR | Works | Upstream capability |
 | No Google Play Services required | Works | Upstream capability |
 | No ads | Works | Upstream capability |
-| F-Droid listing | Not applicable | Ruled out (AI-policy); ship via GitHub Releases + Obtainium |
+| Official F-Droid / IzzyOnDroid listing | Not applicable | IzzyOnDroid ruled out (AI-policy); official fdroiddata deferred (F-Droid key → no in-place upgrade). Ship via GitHub Releases + Obtainium + self-hosted F-Droid repo |

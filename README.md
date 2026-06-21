@@ -74,7 +74,9 @@ Pick the APK for your device:
 | `x86` | Emulators |
 | `universal` | Everything — larger file |
 
-SmarterTube installs as `app.smarttube.mobile` and is **co-installable** with the upstream SmartTube TV build (`app.smarttube`). They do not conflict.
+SmarterTube installs as `com.codesculptor.smartertube` and is **co-installable** with the upstream SmartTube TV build (`app.smarttube`). They do not conflict.
+
+> **Upgrading from a build before this rename?** Versions up to `v0.4.2-beta.8` shipped under the old package `app.smarttube.mobile`. The new id is a separate app, so it installs *alongside* the old one rather than upgrading it — uninstall the old SmarterTube after installing this one. Settings and signed-in accounts do not carry over and need to be set up again (one-time).
 
 ### Auto-updates via Obtainium
 
@@ -86,7 +88,22 @@ SmarterTube is not on any app store. [Obtainium](https://github.com/ImranR98/Obt
 
 This is the easiest way to stay current.
 
-Official builds are published only on this GitHub Releases page unless another source is explicitly linked here.
+### Install via F-Droid (self-hosted repo)
+
+SmarterTube runs its **own** F-Droid repository — the same APKs as GitHub Releases, signed with the same key, so installs upgrade in place. It is a self-hosted repo (not the official F-Droid index): you add it once in the F-Droid client and get auto-updates.
+
+1. Install [F-Droid](https://f-droid.org/) (or a compatible client such as Droid-ify).
+2. **Settings → Repositories → Add** this URL (fingerprint included so the client verifies it):
+
+   ```
+   https://codesculptor.github.io/SmarterTube/fdroid/repo?fingerprint=<REPO_FINGERPRINT>
+   ```
+
+3. Refresh, search for **SmarterTube**, and install. Updates then arrive through F-Droid automatically.
+
+> The repo serves SmarterTube's own builds only; it is not affiliated with the official F-Droid repository or with upstream SmartTube.
+
+Official builds are published only on this GitHub Releases page (and the SmarterTube F-Droid repo above) unless another source is explicitly linked here.
 
 ### Verifying your download
 
@@ -139,7 +156,7 @@ SmarterTube is a **beta** release. A few realities are worth knowing before you 
 Specific gaps:
 
 - **TV / leanback interface** — install [upstream SmartTube](https://github.com/yuliskov/SmartTube) for Android TV boxes and sticks.
-- **F-Droid / IzzyOnDroid listing** — not available; use GitHub Releases or [Obtainium](#auto-updates-via-obtainium).
+- **Official F-Droid / IzzyOnDroid index** — not listed there; instead use GitHub Releases, [Obtainium](#auto-updates-via-obtainium), or SmarterTube's own [F-Droid repo](#install-via-f-droid-self-hosted-repo).
 - **Casting / Chromecast** — not currently exposed in the phone UI.
 
 ---

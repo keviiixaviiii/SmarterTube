@@ -1,13 +1,13 @@
 # Privacy Policy — SmarterTube
 
-**Package ID:** `app.smarttube.mobile`  
+**Package ID:** `com.codesculptor.smartertube`  
 **Last updated:** May 2026
 
 ---
 
 ## What this app is
 
-SmarterTube is a phone and tablet client for YouTube. It is a fork of [SmartTube](https://github.com/yuliskov/SmartTube) by yuliskov; the YouTube client engine is upstream's code, merged unchanged. This policy covers the SmarterTube fork (`app.smarttube.mobile`) only — not the upstream SmartTube TV build.
+SmarterTube is a phone and tablet client for YouTube. It is a fork of [SmartTube](https://github.com/yuliskov/SmartTube) by yuliskov; the YouTube client engine is upstream's code, merged unchanged. This policy covers the SmarterTube fork (`com.codesculptor.smartertube`) only — not the upstream SmartTube TV build.
 
 ---
 

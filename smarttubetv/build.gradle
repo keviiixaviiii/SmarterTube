@@ -191,7 +191,13 @@ android {
             // Phone/portrait build. Co-installable alongside the TV build.
             // This is the shipped product; the TV flavors are upstream-sync only.
             isDefault true
-            applicationIdSuffix ".mobile"
+            // Explicit applicationId (NOT a suffix on upstream's app.smarttube) so the
+            // package identity is SmarterTube's own: it neither implies association with
+            // upstream SmartTube nor an "official" mobile release, and carries no platform
+            // qualifier (an Android package is implicitly the app; tablets included).
+            // Renamed from the legacy app.smarttube.mobile in the 2026-06 beta — a one-time
+            // clean break (the old id does NOT upgrade in place; see docs/upstream-merge.md).
+            applicationId "com.codesculptor.smartertube"
             // Fall back to ststable for dependency modules that don't
             // declare an stmobile flavor.
             matchingFallbacks = ['ststable']
