@@ -19,8 +19,9 @@
     signing key lives only locally (+ the backup); nothing is uploaded to the cloud.
 
 .PARAMETER VersionName
-    Full fork version, "<engine>-mobile-<major>.<minor>", e.g. "31.93-mobile-1.3".
-    The <engine> part should match the merged upstream engine (defaultConfig versionName);
+    Full fork version following the beta-reset scheme (docs/VERSIONING.md):
+    "v<major>.<minor>.<patch>[-<channel>.<n>]+st<upstream>", e.g. "v0.5.0-beta.1+st31.94".
+    The +st<upstream> suffix must match the merged upstream engine (defaultConfig versionName);
     a mismatch warns but does not block.
 
 .PARAMETER VersionCode
@@ -42,9 +43,9 @@
     GitHub repo slug. Default: CodeSculptor/SmarterTube.
 
 .EXAMPLE
-    .\release.ps1 -VersionName 31.93-mobile-1.3
+    .\release.ps1 -VersionName v0.5.0-beta.1+st31.94 -Prerelease
 .EXAMPLE
-    .\release.ps1 -VersionName 31.93-mobile-2.0-beta1 -Prerelease -DryRun
+    .\release.ps1 -VersionName v0.5.0-beta.1+st31.94 -Prerelease -DryRun
 #>
 [CmdletBinding()]
 param(
@@ -150,11 +151,11 @@ $curName = [regex]::Match($block, 'versionName\s+"([^"]+)"').Groups[1].Value
 if ($VersionCode -eq 0) { $VersionCode = $curCode + 1 }
 if ($VersionCode -le $curCode) { Die "versionCode $VersionCode is not greater than current $curCode (monotonic rule)." }
 
-# Engine-prefix sanity check against defaultConfig versionName
+# Upstream-base sanity check: the +st<upstream> suffix should match defaultConfig versionName.
 $engineDefault = [regex]::Match($content, 'versionName\s+"(\d[\d.]*)"').Groups[1].Value
-$engineOfNew   = ($VersionName -split '-mobile-')[0]
-if ($engineDefault -and $engineOfNew -and ($engineOfNew -ne $engineDefault)) {
-    Write-Host "    WARN: engine prefix '$engineOfNew' != merged engine '$engineDefault' (defaultConfig). Continuing." -ForegroundColor Yellow
+$stSuffix = [regex]::Match($VersionName, '\+st(\d[\d.]*)$').Groups[1].Value
+if ($engineDefault -and $stSuffix -and ($stSuffix -ne $engineDefault)) {
+    Write-Host "    WARN: +st suffix '$stSuffix' != merged engine '$engineDefault' (defaultConfig). Continuing." -ForegroundColor Yellow
 }
 
 # Tag must not already exist
@@ -177,7 +178,7 @@ Step 'Building signed release APKs (assembleStmobileRelease)'
 & $Gradle ':smarttubetv:assembleStmobileRelease' --no-daemon
 if ($LASTEXITCODE -ne 0) { git -C $Root checkout -- $BuildGradle; Die 'gradle build failed (build.gradle bump reverted).' }
 
-$apks = Get-ChildItem (Join-Path $ReleaseDir "SmartTube_mobile_${VersionName}_*.apk") -ErrorAction SilentlyContinue
+$apks = Get-ChildItem (Join-Path $ReleaseDir "SmarterTube-$($VersionName.Replace('+', '-'))-*.apk") -ErrorAction SilentlyContinue
 if ($apks.Count -ne 4) {
     git -C $Root checkout -- $BuildGradle
     Die "expected 4 ABI APKs, found $($apks.Count) in $ReleaseDir (bump reverted)."
