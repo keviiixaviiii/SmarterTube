@@ -5,7 +5,7 @@ name: stmobile validate
 # upstream-sync PRs, where it's the human-judgment safety net).
 #
 # Three integration points checked (from rebase_runbook):
-#   1. smarttubetv/build.gradle — stmobile product flavor with .mobile suffix
+#   1. smarttubetv/build.gradle — stmobile product flavor with the com.codesculptor.smartertube applicationId
 #   2. common/build.gradle      — stmobile flavor with ststable matchingFallbacks
 #   3. MainApplication.java     — protected setupViewManager (widened from private)
 
