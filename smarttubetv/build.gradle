@@ -235,8 +235,8 @@ android {
             // 23720 = v0.4.2-beta.8+st31.94 (Shorts seek bar visible + auto-hide (#28);
             //         settings dialog presents as a bottom-sheet card over the player;
             //         Back on player no longer re-opens a just-closed settings dialog).
-            versionCode 23720
-            versionName "v0.4.2-beta.8+st31.94"
+            versionCode 23721
+            versionName "v0.5.0-beta.1+st31.94"
         }
     }
 }
