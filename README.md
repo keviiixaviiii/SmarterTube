@@ -96,7 +96,7 @@ SmarterTube runs its **own** F-Droid repository — the same APKs as GitHub Rele
 2. **Settings → Repositories → Add** this URL (fingerprint included so the client verifies it):
 
    ```
-   https://codesculptor.github.io/SmarterTube/fdroid/repo?fingerprint=<REPO_FINGERPRINT>
+   https://codesculptor.github.io/SmarterTube/fdroid/repo?fingerprint=C7AE86B0A3291B5D7396411BE185C60B298C9D25012172DDFC859B25B540A46B
    ```
 
 3. Refresh, search for **SmarterTube**, and install. Updates then arrive through F-Droid automatically.
