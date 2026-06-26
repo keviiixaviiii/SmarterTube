@@ -257,6 +257,22 @@ public class PlaybackFragment extends SeekModePlaybackFragment implements Playba
         // NOP
     }
 
+    private void switchToBackgroundAudio() {
+        // Pause video playback
+        if (mPlayer != null) {
+            mPlayer.setPlayWhenReady(false);
+        }
+    
+        // Start background audio service
+        Intent audioServiceIntent = new Intent(this, AudioBackgroundService.class);
+        audioServiceIntent.putExtra("video_id", getCurrentVideoId());
+        startService(audioServiceIntent);
+    
+        // Exit PIP mode or close the player
+        finishAfterTransition();
+    }
+
+
     public void onDispatchTouchEvent(MotionEvent event) {
         if (mDoubleTapPlayerAdapter != null && !isOverlayShown()) {
             boolean handled = mDoubleTapPlayerAdapter.onTouchEvent(event);
