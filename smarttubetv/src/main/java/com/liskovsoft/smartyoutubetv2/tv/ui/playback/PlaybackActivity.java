@@ -349,4 +349,20 @@ public class PlaybackActivity extends LeanbackActivity {
     //    return getGeneralData().getBackgroundPlaybackShortcut() == GeneralData.BACKGROUND_PLAYBACK_SHORTCUT_BACK ||
     //            getGeneralData().getBackgroundPlaybackShortcut() == GeneralData.BACKGROUND_PLAYBACK_SHORTCUT_HOME_BACK;
     //}
+
+    /**
+     * Handle background audio mode
+     */
+    public void switchToBackgroundAudio() {
+        if (mPlaybackFragment != null && mPlaybackFragment.isPlaying()) {
+            // Block engine to keep audio playing
+            mPlaybackFragment.blockEngine(true);
+            
+            // Keep the activity in background mode
+            getViewManager().blockTop(this);
+            
+            // Finish the activity (user will only hear audio)
+            finish();
+        }
+    }
 }

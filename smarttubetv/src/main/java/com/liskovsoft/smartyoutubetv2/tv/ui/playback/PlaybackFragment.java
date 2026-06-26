@@ -837,6 +837,13 @@ public class PlaybackFragment extends SeekModePlaybackFragment implements Playba
 
         @Override
         public void onAction(int actionId, int actionIndex) {
+            if (actionId == R.id.action_background_audio) {
+                PlaybackActivity activity = (PlaybackActivity) getActivity();
+                if (activity != null) {
+                    activity.switchToBackgroundAudio();
+                }
+                return;
+            }
             mPlaybackPresenter.onButtonClicked(actionId, actionIndex);
         }
 

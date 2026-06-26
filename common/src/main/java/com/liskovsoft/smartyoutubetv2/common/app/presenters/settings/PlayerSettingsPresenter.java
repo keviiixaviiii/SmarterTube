@@ -217,6 +217,7 @@ public class PlayerSettingsPresenter extends BasePresenter<Void> {
                 {R.string.action_channel, PlayerTweaksData.PLAYER_BUTTON_OPEN_CHANNEL},
                 {R.string.action_search, PlayerTweaksData.PLAYER_BUTTON_SEARCH},
                 {R.string.run_in_background, PlayerTweaksData.PLAYER_BUTTON_PIP},
+                {R.string.action_background_audio, PlayerTweaksData.PLAYER_BUTTON_BACKGROUND_AUDIO},
                 {R.string.action_video_speed, PlayerTweaksData.PLAYER_BUTTON_VIDEO_SPEED},
                 {R.string.action_subtitles, PlayerTweaksData.PLAYER_BUTTON_SUBTITLES},
                 {R.string.action_subscribe, PlayerTweaksData.PLAYER_BUTTON_SUBSCRIBE},
